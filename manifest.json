@@ -1,0 +1,10 @@
+{
+  "id": "ima-sync",
+  "name": "ima.copilot To Obsidian",
+  "version": "0.1.0",
+  "minAppVersion": "1.6.0",
+  "description": "将腾讯 ima 知识库与笔记单向同步到 Obsidian，自动转换为 Markdown 并下载附件。",
+  "author": "hifengzy",
+  "authorUrl": "https://github.com/hifengzy",
+  "isDesktopOnly": false
+}

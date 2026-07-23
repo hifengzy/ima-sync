@@ -1,0 +1,53 @@
+/* ima.copilot To Obsidian - 设置页样式 */
+
+.ima-sync-setting-heading {
+  margin-top: 1.5em;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.ima-sync-kb-list {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 0.25em 0.75em;
+  margin-bottom: 0.5em;
+}
+
+.ima-sync-kb-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35em 0;
+}
+
+.ima-sync-kb-item + .ima-sync-kb-item {
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.ima-sync-kb-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ima-sync-kb-name .kb-title {
+  font-weight: 500;
+}
+
+.ima-sync-kb-name .kb-meta {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.ima-sync-readonly-hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  padding: 0.25em 0;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  padding-left: 0.5em;
+}
+
+.ima-sync-summary {
+  white-space: pre-line;
+}

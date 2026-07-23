@@ -1,0 +1,34 @@
+{
+  "name": "ima-sync",
+  "version": "0.1.0",
+  "description": "将腾讯 ima 知识库与笔记单向同步到 Obsidian，自动转换为 Markdown 并下载附件。",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "typecheck": "tsc -noEmit -skipLibCheck",
+    "test:build": "node test/build-test.mjs",
+    "test": "node test/smoke.mjs"
+  },
+  "keywords": [
+    "obsidian",
+    "ima",
+    "sync",
+    "markdown"
+  ],
+  "author": "hifengzy",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/turndown": "^5.0.5",
+    "builtin-modules": "^4.0.0",
+    "esbuild": "0.21.5",
+    "obsidian": "^1.6.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "turndown": "^7.2.0"
+  }
+}
