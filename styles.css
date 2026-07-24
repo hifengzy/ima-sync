@@ -51,3 +51,14 @@
 .ima-sync-summary {
   white-space: pre-line;
 }
+
+.ima-sync-confirm-message {
+  white-space: pre-line;
+  margin: 0 0 12px 0;
+}
+
+.ima-sync-confirm-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

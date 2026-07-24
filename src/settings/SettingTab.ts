@@ -8,6 +8,7 @@ import type { Plugin } from "obsidian";
 import type { ImaSyncSettings, ScheduleUnit, SelectedKb } from "./types";
 import type { KbInfo } from "../api/types";
 import { KbPickerModal } from "../ui/KbPickerModal";
+import { ConfirmModal } from "../ui/ConfirmModal";
 import { showToast } from "../ui/ProgressNotice";
 import { clampSchedule, resolveGlobalAttachmentDirForDisplay } from "../utils/path";
 
@@ -293,21 +294,21 @@ export class ImaSyncSettingTab extends PluginSettingTab {
         btn
           .setButtonText("清空缓存")
           .setWarning()
-          .onClick(async () => {
-            const confirmed = confirm(
-              "确认清空同步索引缓存？\n\n清空后下次同步将全量重新拉取所有内容。\n（不会删除已同步的文档，也不会清除凭证与设置）",
-            );
-            if (!confirmed) return;
-            btn.setDisabled(true);
-            try {
-              await this.plugin.clearCache();
-              new Notice("已清空同步索引缓存", 4000);
-              await this.renderCacheStat(statEl);
-            } catch (e) {
-              new Notice(`清空失败：${e instanceof Error ? e.message : String(e)}`, 8000);
-            } finally {
-              btn.setDisabled(false);
-            }
+          .onClick(() => {
+            new ConfirmModal(this.app, {
+              title: "清空同步索引缓存",
+              message: "清空后下次同步将全量重新拉取所有内容。\n不会删除已同步的文档，也不会清除凭证与设置。",
+              confirmText: "确认清空",
+              onConfirm: async () => {
+                try {
+                  await this.plugin.clearCache();
+                  new Notice("已清空同步索引缓存", 4000);
+                  await this.renderCacheStat(statEl);
+                } catch (e) {
+                  new Notice(`清空失败：${e instanceof Error ? e.message : String(e)}`, 8000);
+                }
+              },
+            }).open();
           }),
       );
   }
