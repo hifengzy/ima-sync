@@ -11,7 +11,8 @@
     "test:build": "node test/build-test.mjs",
     "test": "node test/smoke.mjs",
     "verify:images": "node test/verify-images.mjs",
-    "verify:frontmatter": "esbuild test/verify-frontmatter.ts --bundle --platform=node --format=esm --outfile=test/verify-frontmatter.mjs --external:obsidian && node test/verify-frontmatter.mjs"
+    "verify:frontmatter": "esbuild test/verify-frontmatter.ts --bundle --platform=node --format=esm --outfile=test/verify-frontmatter.mjs --external:obsidian && node test/verify-frontmatter.mjs",
+    "verify:clear": "esbuild test/verify-clear.ts --bundle --platform=node --format=esm --outfile=test/verify-clear.mjs --external:obsidian && node test/verify-clear.mjs"
   },
   "keywords": [
     "obsidian",

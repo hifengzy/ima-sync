@@ -6,6 +6,7 @@ main.js
 *.js.map
 test/smoke.mjs
 test/verify-frontmatter.mjs
+test/verify-clear.mjs
 
 # Obsidian plugin local data (凭证与同步索引，不入库)
 data.json

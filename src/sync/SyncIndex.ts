@@ -75,6 +75,12 @@ export class SyncIndex {
     }
   }
 
+  /** 清空全部索引记录（标记 dirty，需 save 落盘；FR-12 缓存清理） */
+  clear(): void {
+    this.entries = {};
+    this.dirty = true;
+  }
+
   /** 当前索引条目数 */
   size(): number {
     return Object.keys(this.entries).length;
