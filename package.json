@@ -13,7 +13,8 @@
     "verify:images": "node test/verify-images.mjs",
     "verify:frontmatter": "esbuild test/verify-frontmatter.ts --bundle --platform=node --format=esm --outfile=test/verify-frontmatter.mjs --external:obsidian && node test/verify-frontmatter.mjs",
     "verify:clear": "esbuild test/verify-clear.ts --bundle --platform=node --format=esm --outfile=test/verify-clear.mjs --external:obsidian && node test/verify-clear.mjs",
-    "verify:quota": "esbuild test/verify-quota.ts --bundle --platform=node --format=esm --outfile=test/verify-quota.mjs --external:obsidian && node test/verify-quota.mjs"
+    "verify:quota": "esbuild test/verify-quota.ts --bundle --platform=node --format=esm --outfile=test/verify-quota.mjs --external:obsidian && node test/verify-quota.mjs",
+    "verify:naming": "esbuild test/verify-image-naming.ts --bundle --platform=node --format=esm --outfile=test/verify-image-naming.mjs --external:obsidian && node test/verify-image-naming.mjs"
   },
   "keywords": [
     "obsidian",

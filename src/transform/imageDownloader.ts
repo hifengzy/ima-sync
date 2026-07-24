@@ -11,8 +11,9 @@
 import type { App } from "obsidian";
 import { normalizePath } from "obsidian";
 import type { ImaClient } from "../api/imaClient";
-import { ensureFolder, getDocIdPrefix } from "../utils/path";
+import { ensureFolder } from "../utils/path";
 import { logger } from "../utils/logger";
+import { buildImageFilename } from "./imageNaming";
 
 export interface ImageLocalizeResult {
   content: string;
@@ -62,7 +63,6 @@ export async function localizeImages(opts: {
   docId: string;
 }): Promise<ImageLocalizeResult> {
   const { app, client, content, attachmentDir, docId } = opts;
-  const docPrefix = getDocIdPrefix(docId);
 
   // 收集所有图片 URL（markdown + html img），去重保序
   const urls: string[] = [];
@@ -99,7 +99,7 @@ export async function localizeImages(opts: {
     if (url.startsWith("data:")) {
       const decoded = decodeDataUri(url);
       if (decoded) {
-        const filename = `${docPrefix}-${index}.${decoded.ext}`;
+        const filename = buildImageFilename(docId, index, decoded.ext);
         await writeBinary(app, normalizePath(`${attachmentDir}/${filename}`), decoded.buffer);
         urlToFilename.set(url, filename);
         downloaded++;
@@ -114,7 +114,7 @@ export async function localizeImages(opts: {
     try {
       const result = await client.fetchUrl(url);
       const ext = inferImageExt(result.contentType, url);
-      const filename = `${docPrefix}-${index}.${ext}`;
+      const filename = buildImageFilename(docId, index, ext);
       await writeBinary(app, normalizePath(`${attachmentDir}/${filename}`), result.arrayBuffer);
       urlToFilename.set(url, filename);
       downloaded++;
