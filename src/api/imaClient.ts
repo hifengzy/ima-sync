@@ -27,6 +27,7 @@ import type {
   SearchKbRequest,
 } from "./types";
 import { RateLimiter, isRetryableStatus } from "../utils/rateLimiter";
+import { isQuotaExceededResponse } from "./errors";
 import { errorMessage } from "../utils/logger";
 
 export interface FetchResult {
@@ -80,9 +81,24 @@ export class ImaClient {
           return { kind: "retryable", error: `[${endpoint}] 请求失败 (${status})` };
         }
         if (status >= 400) {
-          // 解析响应体 msg（如 403 配额超限「请求超量，请明日再试」），让错误可读
-          const errJson = resp.json as ImaResponse<unknown> | undefined;
-          const msg = errJson?.msg;
+          // 优先用 resp.text 手动解析（Obsidian requestUrl 在 4xx 时 resp.json 可能不填充）
+          let body: ImaResponse<unknown> | undefined;
+          try {
+            body = resp.json as ImaResponse<unknown> | undefined;
+          } catch {
+            body = undefined;
+          }
+          if (!body && resp.text) {
+            try {
+              body = JSON.parse(resp.text) as ImaResponse<unknown>;
+            } catch {
+              body = undefined;
+            }
+          }
+          const msg = body?.msg;
+          if (isQuotaExceededResponse(status, body)) {
+            return { kind: "quota", error: msg || "请求超量，请明日再试" };
+          }
           return {
             kind: "fatal",
             error: msg ? `[${endpoint}] ${msg}（HTTP ${status}）` : `[${endpoint}] HTTP ${status}`,

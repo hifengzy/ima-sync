@@ -81,7 +81,12 @@ export default class ImaSyncPlugin extends Plugin {
       showToast("请先配置 ima Client ID 与 API Key", 5000);
       return;
     }
-    await this.syncManager.triggerSync();
+    this.setRibbonSpinning(true);
+    try {
+      await this.syncManager.triggerSync();
+    } finally {
+      this.setRibbonSpinning(false);
+    }
   }
 
   // ===== 验证连接 =====
@@ -141,6 +146,11 @@ export default class ImaSyncPlugin extends Plugin {
     if (this.settings.showRibbonIcon) {
       this.ribbonIconEl = this.addRibbonIcon("refresh-cw", "同步 ima 知识库", () => void this.triggerSync());
     }
+  }
+
+  /** 同步期间 ribbon icon 旋转（FR-11.4） */
+  setRibbonSpinning(spinning: boolean): void {
+    this.ribbonIconEl?.toggleClass("ima-sync-spinning", spinning);
   }
 
   // ===== 探针 =====

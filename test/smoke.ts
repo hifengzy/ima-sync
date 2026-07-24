@@ -11,6 +11,7 @@
  */
 import { ImaClient } from "../src/api/imaClient";
 import { ImaApi } from "../src/api/endpoints";
+import { ImaQuotaExceededError } from "../src/api/errors";
 
 const clientId = process.env.IMA_CLIENT_ID;
 const apiKey = process.env.IMA_API_KEY;
@@ -53,7 +54,7 @@ async function main(): Promise<void> {
   expect(content.length > 0, "笔记正文非空");
 
   console.log("\n=== 4. listKnowledgeLevel（知识库当前层级）===");
-  const target = kbs.find((k) => Number(k.content_count) > 0) ?? kbs[0];
+  const target = kbs.find((k) => k.base_type.includes("个人")) ?? kbs.find((k) => Number(k.content_count) > 0) ?? kbs[0];
   const page = await api.listKnowledgeLevel(target.kb_id, "");
   console.log(`知识库「${target.kb_name}」当前层级条目数:`, page.items.length);
   expect(page.items.length > 0, "知识库内容列表非空");
@@ -73,13 +74,16 @@ async function main(): Promise<void> {
       console.log("media_type:", media.media_type, "| url:", media.url_info?.url?.slice(0, 60));
       expect(Boolean(media.url_info?.url), "媒体 url_info.url 非空");
     } catch (e) {
+      const isQuota = e instanceof ImaQuotaExceededError;
       const msg = e instanceof Error ? e.message : String(e);
-      console.log("getMediaInfo 抛错:", msg);
-      // 配额超限时验证错误提示含可读原因（改进：解析响应体 msg）
-      if (msg.includes("请求超量") || msg.includes("HTTP 403")) {
-        console.log("✓ 配额超限错误提示可读（含原因）");
+      console.log("getMediaInfo 抛错:", msg, "| ImaQuotaExceededError:", isQuota);
+      const readable = msg.length > 15 && !/^\[.+\] HTTP \d+$/.test(msg);
+      if (isQuota && msg.includes("请求超量")) {
+        console.log("✓ 配额超限识别为 ImaQuotaExceededError，提示可读");
+      } else if (!isQuota && readable) {
+        console.log("✓ 错误消息可读（含响应体原因）");
       } else {
-        console.log("✗ 错误提示不可读");
+        console.log("✗ 错误未识别或提示不可读");
         process.exit(1);
       }
     }

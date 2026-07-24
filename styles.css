@@ -62,3 +62,16 @@
   gap: 8px;
   justify-content: flex-end;
 }
+
+.ima-sync-spinning svg {
+  animation: ima-sync-spin 1s linear infinite;
+}
+
+@keyframes ima-sync-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
