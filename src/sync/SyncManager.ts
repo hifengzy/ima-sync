@@ -203,15 +203,8 @@ export class SyncManager {
     const notebookId = mediaInfo.notebook_ext_info?.notebook_id ?? docId;
     const raw = await this.api.getDocContent(notebookId);
     const body = await this.processNoteBody(raw, kb.kb_name, docId);
-    const props = this.buildProps({
-      title: item.title,
-      created: timestampToIso(mediaInfo.create_time),
-      source: undefined,
-      docId,
-      kb,
-      remoteUpdateTime,
-    });
-    await this.writeFile(parentPath, item.title, docId, action, body, props);
+    const props = this.buildProps({ title: item.title, docId });
+    await this.writeFile(parentPath, item.title, docId, action, body, props, kb.kb_id, remoteUpdateTime);
   }
 
   /** 链接 / 文件类：fetch URL -> 按 Content-Type 分支 */
@@ -241,15 +234,8 @@ export class SyncManager {
         docId,
         attachmentDir,
       });
-      const props = this.buildProps({
-        title: item.title,
-        created: undefined,
-        source: url,
-        docId,
-        kb,
-        remoteUpdateTime,
-      });
-      await this.writeFile(parentPath, item.title, docId, action, result.body, props);
+      const props = this.buildProps({ title: item.title, source: url, docId });
+      await this.writeFile(parentPath, item.title, docId, action, result.body, props, kb.kb_id, remoteUpdateTime);
       return;
     }
 
@@ -264,15 +250,8 @@ export class SyncManager {
       url,
     });
     const body = `# ${item.title}\n\n> 文件类型：${saved.ext.toUpperCase()}\n\n[${saved.filename}](${saved.filename})\n`;
-    const props = this.buildProps({
-      title: item.title,
-      created: undefined,
-      source: undefined,
-      docId,
-      kb,
-      remoteUpdateTime,
-    });
-    await this.writeFile(parentPath, item.title, docId, action, body, props, baseName);
+    const props = this.buildProps({ title: item.title, source: url, docId });
+    await this.writeFile(parentPath, item.title, docId, action, body, props, kb.kb_id, remoteUpdateTime, baseName);
   }
 
   // ===== 笔记同步 =====
@@ -299,15 +278,8 @@ export class SyncManager {
     try {
       const raw = await this.api.getDocContent(docId);
       const body = await this.processNoteBody(raw, NOTES_DIR_NAME, docId);
-      const props = this.buildProps({
-        title: note.title,
-        created: timestampToIso(note.create_time),
-        source: undefined,
-        docId,
-        kb: { kb_id: "", kb_name: NOTES_DIR_NAME },
-        remoteUpdateTime,
-      });
-      await this.writeFile(notesPath, note.title, docId, action, body, props);
+      const props = this.buildProps({ title: note.title, docId });
+      await this.writeFile(notesPath, note.title, docId, action, body, props, "", remoteUpdateTime);
       this.stats[action === "create" ? "created" : "updated"]++;
     } catch (e) {
       this.recordFailure(note.title, e);
@@ -333,24 +305,12 @@ export class SyncManager {
     return remoteUpdateTimeSec > localSec ? "update" : "skip";
   }
 
-  private buildProps(args: {
-    title: string;
-    created?: string;
-    source?: string;
-    docId: string;
-    kb: { kb_id: string; kb_name: string };
-    remoteUpdateTime: number;
-  }): FrontmatterProps {
+  private buildProps(args: { title: string; source?: string; docId: string }): FrontmatterProps {
     return {
       title: args.title || `untitled-${getDocIdPrefix(args.docId)}`,
-      created: args.created,
+      created: timestampToIso(Date.now()),
       source: args.source,
       tags: [DEFAULT_TAG],
-      ima_doc_id: args.docId,
-      ima_kb_id: args.kb.kb_id,
-      ima_kb_name: args.kb.kb_name,
-      ima_update_time: String(args.remoteUpdateTime || ""),
-      synced_at: new Date().toISOString(),
     };
   }
 
@@ -365,6 +325,8 @@ export class SyncManager {
     action: "create" | "update",
     body: string,
     props: FrontmatterProps,
+    kbId: string,
+    remoteUpdateTime: number,
     forcedBaseName?: string,
   ): Promise<void> {
     let mdPath: string;
@@ -396,11 +358,11 @@ export class SyncManager {
 
     this.index.upsert(docId, {
       path: mdPath,
-      kb_id: props.ima_kb_id,
+      kb_id: kbId,
       title: props.title,
       media_type: 0,
-      update_time: props.ima_update_time,
-      synced_at: props.synced_at,
+      update_time: String(remoteUpdateTime || ""),
+      synced_at: new Date().toISOString(),
     });
   }
 
@@ -414,27 +376,22 @@ export class SyncManager {
     return normalizePath(`${parentPath}/${base}.md`);
   }
 
-  /** 同名冲突消歧：已有同名文件且非同 doc -> 追加 doc_id 前缀（FR-4.6） */
+  /**
+   * 同名冲突消歧：已有同名文件且非同 doc -> 追加 doc_id 前缀（FR-4.6）。
+   * 通过 sync-index 反查归属，不依赖 frontmatter（避免污染文档元数据）。
+   */
   private async resolveUniqueBaseName(parentPath: string, baseName: string, docId: string): Promise<string> {
     const path = normalizePath(`${parentPath}/${baseName}.md`);
     const existing = this.app.vault.getAbstractFileByPath(path);
     if (!existing) return baseName;
-    if (this.getOwnerDocId(existing) === docId) return baseName;
+    // 索引中当前 docId 已指向该路径 -> 同一文档，不冲突
+    if (this.index.get(docId)?.path === path) return baseName;
+    // 否则视为不同文档冲突，追加 doc_id 前缀
     const conflicted = `${baseName}-${getDocIdPrefix(docId)}`;
-    const cExisting = this.app.vault.getAbstractFileByPath(normalizePath(`${parentPath}/${conflicted}.md`));
-    if (!cExisting || this.getOwnerDocId(cExisting) === docId) return conflicted;
+    const cPath = normalizePath(`${parentPath}/${conflicted}.md`);
+    const cExisting = this.app.vault.getAbstractFileByPath(cPath);
+    if (!cExisting || this.index.get(docId)?.path === cPath) return conflicted;
     return `${baseName}-${docId}`;
-  }
-
-  private getOwnerDocId(file: unknown): string | undefined {
-    try {
-      const tfile = file as TFile;
-      const cache = this.app.metadataCache.getFileCache(tfile);
-      const v = cache?.frontmatter?.ima_doc_id;
-      return v !== undefined ? String(v) : undefined;
-    } catch {
-      return undefined;
-    }
   }
 
   /** 更新已存在文件：保留 frontmatter 块 + 覆盖正文，再 processFrontMatter 更新字段（保留用户自定义属性） */

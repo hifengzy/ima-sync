@@ -87,6 +87,11 @@ export async function extractFromHtml(opts: {
   const { app, client, html, url, title, docId, attachmentDir } = opts;
   try {
     const doc = new DOMParser().parseFromString(html, "text/html");
+    // 修复懒加载图片：微信等用 data-src 而非 src，turndown 与 localizeImages 只读 src
+    doc.querySelectorAll("img[data-src]").forEach((img) => {
+      const ds = img.getAttribute("data-src");
+      if (ds) img.setAttribute("src", ds);
+    });
     const main = pickMainContent(doc);
     if (!main) {
       return degrade(title, url, readMetaContent(doc, "og:description"));

@@ -185,17 +185,21 @@ export class ImaSyncSettingTab extends PluginSettingTab {
         .onChange(async (v) => {
           this.plugin.settings.attachmentMode = v as ImaSyncSettings["attachmentMode"];
           await this.plugin.saveSettings();
-          this.renderAttachment(el);
+          this.renderAttachmentHint(hintEl);
         });
     });
+    const hintEl = el.createDiv({ cls: "ima-sync-attachment-hint" });
+    this.renderAttachmentHint(hintEl);
+  }
 
-    if (this.plugin.settings.attachmentMode === "obsidian-global") {
-      const globalDir = resolveGlobalAttachmentDirForDisplay(this.app);
-      const hint = globalDir
-        ? `当前全局附件目录：${globalDir}`
-        : "未配置，同步时将回退至各知识库内 attachments";
-      el.createEl("div", { text: hint, cls: "ima-sync-readonly-hint" });
-    }
+  private renderAttachmentHint(hintEl: HTMLElement): void {
+    hintEl.empty();
+    if (this.plugin.settings.attachmentMode !== "obsidian-global") return;
+    const globalDir = resolveGlobalAttachmentDirForDisplay(this.app);
+    const hint = globalDir
+      ? `当前全局附件目录：${globalDir}`
+      : "未配置，同步时将回退至各知识库内 attachments";
+    hintEl.createEl("div", { text: hint, cls: "ima-sync-readonly-hint" });
   }
 
   // ===== 6. 自动同步 =====

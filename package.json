@@ -9,7 +9,9 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "typecheck": "tsc -noEmit -skipLibCheck",
     "test:build": "node test/build-test.mjs",
-    "test": "node test/smoke.mjs"
+    "test": "node test/smoke.mjs",
+    "verify:images": "node test/verify-images.mjs",
+    "verify:frontmatter": "esbuild test/verify-frontmatter.ts --bundle --platform=node --format=esm --outfile=test/verify-frontmatter.mjs --external:obsidian && node test/verify-frontmatter.mjs"
   },
   "keywords": [
     "obsidian",
@@ -24,6 +26,7 @@
     "@types/turndown": "^5.0.5",
     "builtin-modules": "^4.0.0",
     "esbuild": "0.21.5",
+    "jsdom": "^29.1.1",
     "obsidian": "^1.6.0",
     "tslib": "^2.6.2",
     "typescript": "^5.4.5"
