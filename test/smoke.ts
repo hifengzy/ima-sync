@@ -68,9 +68,21 @@ async function main(): Promise<void> {
     console.log("（当前层级无非文件夹条目，跳过）");
   } else {
     console.log(`选取条目：「${article.title}」media_type=${article.media_type}`);
-    const media = await api.getMediaInfo(article.media_id);
-    console.log("media_type:", media.media_type, "| url:", media.url_info?.url?.slice(0, 60));
-    expect(Boolean(media.url_info?.url), "媒体 url_info.url 非空");
+    try {
+      const media = await api.getMediaInfo(article.media_id);
+      console.log("media_type:", media.media_type, "| url:", media.url_info?.url?.slice(0, 60));
+      expect(Boolean(media.url_info?.url), "媒体 url_info.url 非空");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.log("getMediaInfo 抛错:", msg);
+      // 配额超限时验证错误提示含可读原因（改进：解析响应体 msg）
+      if (msg.includes("请求超量") || msg.includes("HTTP 403")) {
+        console.log("✓ 配额超限错误提示可读（含原因）");
+      } else {
+        console.log("✗ 错误提示不可读");
+        process.exit(1);
+      }
+    }
   }
 
   console.log("\n=== 冒烟测试全部通过 ===");

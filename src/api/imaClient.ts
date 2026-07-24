@@ -80,7 +80,13 @@ export class ImaClient {
           return { kind: "retryable", error: `[${endpoint}] 请求失败 (${status})` };
         }
         if (status >= 400) {
-          return { kind: "fatal", error: `[${endpoint}] HTTP ${status}` };
+          // 解析响应体 msg（如 403 配额超限「请求超量，请明日再试」），让错误可读
+          const errJson = resp.json as ImaResponse<unknown> | undefined;
+          const msg = errJson?.msg;
+          return {
+            kind: "fatal",
+            error: msg ? `[${endpoint}] ${msg}（HTTP ${status}）` : `[${endpoint}] HTTP ${status}`,
+          };
         }
         const json = resp.json as ImaResponse<T> | undefined;
         if (!json) {
