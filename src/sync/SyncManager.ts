@@ -42,6 +42,7 @@ import {
 } from "../transform/frontmatter";
 import { DEFAULT_TAG } from "../constants";
 import { showSyncStart, showSyncSummary, showToast } from "../ui/ProgressNotice";
+import { ImaQuotaExceededError } from "../api/errors";
 
 export interface SyncStats {
   created: number;
@@ -56,6 +57,8 @@ const emptyStats = (): SyncStats => ({ created: 0, updated: 0, skipped: 0, faile
 export class SyncManager {
   private readonly api: ImaApi;
   private stats: SyncStats = emptyStats();
+  /** API 配额超限标志，置位后中止后续同步（FR-13） */
+  private quotaExceeded = false;
 
   constructor(
     private readonly app: App,
@@ -83,6 +86,7 @@ export class SyncManager {
     }
 
     this.stats = emptyStats();
+    this.quotaExceeded = false;
     showSyncStart();
     logger.info("同步开始");
 
@@ -91,26 +95,32 @@ export class SyncManager {
       await ensureFolder(this.app, settings.syncRootPath);
 
       for (const kb of settings.selectedKbs) {
+        if (this.quotaExceeded) break;
         try {
           await this.syncKnowledgeBase(kb);
         } catch (e) {
+          if (this.handleQuotaError(e)) break;
           this.recordFailure(`知识库「${kb.kb_name}」`, e);
         }
       }
 
-      if (settings.syncNotes) {
+      if (settings.syncNotes && !this.quotaExceeded) {
         try {
           await this.syncNotes();
         } catch (e) {
-          this.recordFailure("独立笔记", e);
+          if (!this.handleQuotaError(e)) {
+            this.recordFailure("独立笔记", e);
+          }
         }
       }
 
       await this.index.save();
       this.emitSummary();
     } catch (e) {
-      logger.error("同步异常", e);
-      showToast(`同步异常：${errorMessage(e)}`, 8000);
+      if (!this.handleQuotaError(e)) {
+        logger.error("同步异常", e);
+        showToast(`同步异常：${errorMessage(e)}`, 8000);
+      }
     } finally {
       this.state.stop();
       logger.info("同步结束", this.stats);
@@ -145,6 +155,7 @@ export class SyncManager {
   ): Promise<void> {
     const { items } = await this.api.listKnowledgeLevel(kbId, folderId);
     for (const item of items) {
+      if (this.quotaExceeded) break;
       if (isFolder(item.media_type) || item.media_id.startsWith("folder_")) {
         const subName = sanitizeFileName(item.title) || fallbackTitle(item.media_id);
         const subPath = normalizePath(`${parentPath}/${subName}`);
@@ -162,6 +173,7 @@ export class SyncManager {
     try {
       mediaInfo = await this.api.getMediaInfo(docId);
     } catch (e) {
+      if (this.handleQuotaError(e)) return;
       this.recordFailure(item.title, e);
       return;
     }
@@ -186,6 +198,7 @@ export class SyncManager {
       }
       this.stats[action === "create" ? "created" : "updated"]++;
     } catch (e) {
+      if (this.handleQuotaError(e)) return;
       this.recordFailure(item.title, e);
     }
   }
@@ -263,6 +276,7 @@ export class SyncManager {
     logger.info("同步独立笔记");
     const notes = await this.api.listAllNotes();
     for (const note of notes) {
+      if (this.quotaExceeded) break;
       await this.syncNotebookNote(note, notesPath);
     }
   }
@@ -282,6 +296,7 @@ export class SyncManager {
       await this.writeFile(notesPath, note.title, docId, action, body, props, "", remoteUpdateTime);
       this.stats[action === "create" ? "created" : "updated"]++;
     } catch (e) {
+      if (this.handleQuotaError(e)) return;
       this.recordFailure(note.title, e);
     }
   }
@@ -414,8 +429,24 @@ export class SyncManager {
 
   private emitSummary(): void {
     showSyncSummary(this.stats);
+    if (this.quotaExceeded) {
+      showToast("因 API 配额超限，同步已中止。请明日重试。", 8000);
+    }
     if (this.stats.failed > 0) {
       logger.warn("失败详情：", this.stats.errors);
     }
+  }
+
+  /** 处理配额超限错误：首次弹 Notice + 设标志。返回是否为配额错误（FR-13） */
+  private handleQuotaError(e: unknown): boolean {
+    if (e instanceof ImaQuotaExceededError) {
+      if (!this.quotaExceeded) {
+        this.quotaExceeded = true;
+        showToast("请求超量，请明日再试", 8000);
+        logger.warn("API 配额超限，中止同步");
+      }
+      return true;
+    }
+    return false;
   }
 }

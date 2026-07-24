@@ -8,6 +8,7 @@ import type { Plugin } from "obsidian";
 import type { ImaSyncSettings, ScheduleUnit, SelectedKb } from "./types";
 import type { KbInfo } from "../api/types";
 import { KbPickerModal } from "../ui/KbPickerModal";
+import { ConfirmModal } from "../ui/ConfirmModal";
 import { showToast } from "../ui/ProgressNotice";
 import { clampSchedule, resolveGlobalAttachmentDirForDisplay } from "../utils/path";
 
@@ -19,6 +20,8 @@ export interface ImaSyncPluginFacade extends Plugin {
   testConnection(): Promise<{ ok: boolean; message: string }>;
   listAllKnowledgeBases(): Promise<KbInfo[]>;
   triggerSync(): Promise<void>;
+  clearCache(): Promise<void>;
+  getIndexSize(): Promise<number>;
   applySchedule(): void;
   applyRibbon(): void;
 }
@@ -39,6 +42,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
     this.renderAttachment(containerEl);
     this.renderSchedule(containerEl);
     this.renderManual(containerEl);
+    this.renderCache(containerEl);
   }
 
   // ===== 1. ima 认证 =====
@@ -274,5 +278,44 @@ export class ImaSyncSettingTab extends PluginSettingTab {
           }
         }),
     );
+  }
+
+  // ===== 8. 缓存数据 =====
+  private renderCache(el: HTMLElement): void {
+    el.createEl("h3", { text: "缓存数据", cls: "ima-sync-setting-heading" });
+    const statEl = el.createDiv({ cls: "ima-sync-readonly-hint" });
+    void this.renderCacheStat(statEl);
+    new Setting(el)
+      .setName("同步索引缓存")
+      .setDesc(
+        "插件用本地索引（sync-index.json）记录已同步文档以实现增量更新。清空后下次同步将全量重新拉取所有内容；不会删除已同步的文档，也不会清除凭证与设置。",
+      )
+      .addButton((btn) =>
+        btn
+          .setButtonText("清空缓存")
+          .setWarning()
+          .onClick(() => {
+            new ConfirmModal(this.app, {
+              title: "清空同步索引缓存",
+              message: "清空后下次同步将全量重新拉取所有内容。\n不会删除已同步的文档，也不会清除凭证与设置。",
+              confirmText: "确认清空",
+              onConfirm: async () => {
+                try {
+                  await this.plugin.clearCache();
+                  new Notice("已清空同步索引缓存", 4000);
+                  await this.renderCacheStat(statEl);
+                } catch (e) {
+                  new Notice(`清空失败：${e instanceof Error ? e.message : String(e)}`, 8000);
+                }
+              },
+            }).open();
+          }),
+      );
+  }
+
+  private async renderCacheStat(statEl: HTMLElement): Promise<void> {
+    statEl.empty();
+    const size = await this.plugin.getIndexSize();
+    statEl.setText(`当前索引 ${size} 条记录`);
   }
 }

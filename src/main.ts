@@ -19,6 +19,7 @@ export default class ImaSyncPlugin extends Plugin {
   settings!: ImaSyncSettings;
   private client!: ImaClient;
   private syncManager!: SyncManager;
+  private index!: SyncIndex;
   private readonly indexId = "ima-sync";
   private ribbonIconEl?: HTMLElement;
   private intervalId?: number;
@@ -27,9 +28,9 @@ export default class ImaSyncPlugin extends Plugin {
     await this.loadSettings();
 
     this.client = new ImaClient(this.settings.clientId, this.settings.apiKey);
-    const index = new SyncIndex(this.app, this.indexId);
+    this.index = new SyncIndex(this.app, this.indexId);
     const state = new SyncState();
-    this.syncManager = new SyncManager(this.app, this.client, index, state, () => this.settings);
+    this.syncManager = new SyncManager(this.app, this.client, this.index, state, () => this.settings);
 
     // 命令：立即同步（FR-5.1）
     this.addCommand({
@@ -80,7 +81,12 @@ export default class ImaSyncPlugin extends Plugin {
       showToast("请先配置 ima Client ID 与 API Key", 5000);
       return;
     }
-    await this.syncManager.triggerSync();
+    this.setRibbonSpinning(true);
+    try {
+      await this.syncManager.triggerSync();
+    } finally {
+      this.setRibbonSpinning(false);
+    }
   }
 
   // ===== 验证连接 =====
@@ -102,6 +108,20 @@ export default class ImaSyncPlugin extends Plugin {
   async listAllKnowledgeBases(): Promise<KbInfo[]> {
     this.client.configure(this.settings.clientId, this.settings.apiKey);
     return new ImaApi(this.client).listAllKnowledgeBases();
+  }
+
+  // ===== 缓存清理（FR-12） =====
+
+  async clearCache(): Promise<void> {
+    await this.index.load();
+    this.index.clear();
+    await this.index.save();
+    logger.info("已清空同步索引缓存");
+  }
+
+  async getIndexSize(): Promise<number> {
+    await this.index.load();
+    return this.index.size();
   }
 
   // ===== 调度与 ribbon =====
@@ -126,6 +146,11 @@ export default class ImaSyncPlugin extends Plugin {
     if (this.settings.showRibbonIcon) {
       this.ribbonIconEl = this.addRibbonIcon("refresh-cw", "同步 ima 知识库", () => void this.triggerSync());
     }
+  }
+
+  /** 同步期间 ribbon icon 旋转（FR-11.4） */
+  setRibbonSpinning(spinning: boolean): void {
+    this.ribbonIconEl?.toggleClass("ima-sync-spinning", spinning);
   }
 
   // ===== 探针 =====

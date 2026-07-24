@@ -6,11 +6,13 @@
  * 调用方通过 RequestOutcome 告知结果类别，限流器据此决定重试或抛出。
  */
 import { BACKOFF_BASE_MS, BACKOFF_CAP_MS, DEFAULT_QPS, MAX_RETRIES } from "../constants";
+import { ImaQuotaExceededError } from "../api/errors";
 
 export type RequestOutcome<T> =
   | { kind: "success"; value: T }
   | { kind: "retryable"; error: string }
-  | { kind: "fatal"; error: string };
+  | { kind: "fatal"; error: string }
+  | { kind: "quota"; error: string };
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,6 +77,9 @@ export class RateLimiter {
         }
         if (outcome.kind === "fatal") {
           throw new Error(outcome.error);
+        }
+        if (outcome.kind === "quota") {
+          throw new ImaQuotaExceededError(outcome.error);
         }
         lastError = outcome.error;
         attempt++;
