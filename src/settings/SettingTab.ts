@@ -27,6 +27,8 @@ export interface ImaSyncPluginFacade extends Plugin {
 }
 
 export class ImaSyncSettingTab extends PluginSettingTab {
+  private static readonly IMA_OPEN_PLATFORM_URL = "https://ima.qq.com/agent-interface";
+
   constructor(app: App, private readonly plugin: ImaSyncPluginFacade) {
     super(app, plugin);
   }
@@ -49,17 +51,20 @@ export class ImaSyncSettingTab extends PluginSettingTab {
   private renderAuth(el: HTMLElement): void {
     el.createEl("h3", { text: "ima 认证", cls: "ima-sync-setting-heading" });
 
-    new Setting(el).setName("Client ID").addText((text) =>
-      text
-        .setPlaceholder("ima-openapi-clientid")
-        .setValue(this.plugin.settings.clientId)
-        .onChange(async (v) => {
-          this.plugin.settings.clientId = v.trim();
-          await this.plugin.saveSettings();
-        }),
-    );
+    new Setting(el)
+      .setName("Client ID")
+      .setDesc(`从 ${ImaSyncSettingTab.IMA_OPEN_PLATFORM_URL} 获取。`)
+      .addText((text) =>
+        text
+          .setPlaceholder("ima-openapi-clientid")
+          .setValue(this.plugin.settings.clientId)
+          .onChange(async (v) => {
+            this.plugin.settings.clientId = v.trim();
+            await this.plugin.saveSettings();
+          }),
+      );
 
-    new Setting(el).setName("API Key").setDesc("从 ima 开放平台获取，仅本地存储。").addText((text) => {
+    new Setting(el).setName("API Key").setDesc("仅本地存储，不会上传。").addText((text) => {
       text.inputEl.type = "password";
       text.setPlaceholder("ima-openapi-apikey").setValue(this.plugin.settings.apiKey).onChange(async (v) => {
         this.plugin.settings.apiKey = v.trim();
@@ -70,8 +75,8 @@ export class ImaSyncSettingTab extends PluginSettingTab {
     new Setting(el)
       .setName("验证连接")
       .setDesc("调用 ima API 验证凭证有效性。")
-      .addExtraButton((btn) =>
-        btn.setIcon("rotate-cw").setTooltip("验证连接").onClick(async () => {
+      .addButton((btn) =>
+        btn.setButtonText("验证").onClick(async () => {
           btn.setDisabled(true);
           try {
             const r = await this.plugin.testConnection();
@@ -136,7 +141,8 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       left.createDiv({ text: kb.kb_name, cls: "kb-title" });
       const meta = [kb.base_type, kb.role_type].filter(Boolean).join(" · ");
       if (meta) left.createDiv({ text: meta, cls: "kb-meta" });
-      new Setting(item)
+      const deleteBtn = item.createDiv({ cls: "ima-sync-kb-delete" });
+      new Setting(deleteBtn)
         .addExtraButton((btn) =>
           btn.setIcon("trash-2").setTooltip("移除（不删除本地文件）").onClick(async () => {
             this.plugin.settings.selectedKbs = this.plugin.settings.selectedKbs.filter((k) => k.kb_id !== kb.kb_id);
@@ -220,26 +226,31 @@ export class ImaSyncSettingTab extends PluginSettingTab {
         }),
       );
 
-    new Setting(el).setName("同步频次").addText((text) =>
-      text
-        .setPlaceholder("30")
-        .setValue(String(this.plugin.settings.scheduleValue))
-        .onChange(async (v) => {
-          const num = Math.max(1, parseInt(v, 10) || 1);
-          this.plugin.settings.scheduleValue = num;
-          await this.applyClampAndSave();
-        }),
-    );
-    new Setting(el).setName("频次单位").addDropdown((d) => {
-      d.addOption("minutes", "分钟")
-        .addOption("hours", "小时")
-        .addOption("days", "天")
-        .setValue(this.plugin.settings.scheduleUnit)
-        .onChange(async (v) => {
-          this.plugin.settings.scheduleUnit = v as ScheduleUnit;
-          await this.applyClampAndSave();
-        });
-    });
+    new Setting(el)
+      .setName("同步频次")
+      .setDesc("数字与单位左右并列，例如「30 分钟」。")
+      .addText((text) => {
+        text.inputEl.style.width = "80px";
+        text.inputEl.style.marginRight = "8px";
+        text
+          .setPlaceholder("30")
+          .setValue(String(this.plugin.settings.scheduleValue))
+          .onChange(async (v) => {
+            const num = Math.max(1, parseInt(v, 10) || 1);
+            this.plugin.settings.scheduleValue = num;
+            await this.applyClampAndSave();
+          });
+      })
+      .addDropdown((d) => {
+        d.addOption("minutes", "分钟")
+          .addOption("hours", "小时")
+          .addOption("days", "天")
+          .setValue(this.plugin.settings.scheduleUnit)
+          .onChange(async (v) => {
+            this.plugin.settings.scheduleUnit = v as ScheduleUnit;
+            await this.applyClampAndSave();
+          });
+      });
   }
 
   private async applyClampAndSave(): Promise<void> {
@@ -283,8 +294,6 @@ export class ImaSyncSettingTab extends PluginSettingTab {
   // ===== 8. 缓存数据 =====
   private renderCache(el: HTMLElement): void {
     el.createEl("h3", { text: "缓存数据", cls: "ima-sync-setting-heading" });
-    const statEl = el.createDiv({ cls: "ima-sync-readonly-hint" });
-    void this.renderCacheStat(statEl);
     new Setting(el)
       .setName("同步索引缓存")
       .setDesc(
@@ -311,6 +320,8 @@ export class ImaSyncSettingTab extends PluginSettingTab {
             }).open();
           }),
       );
+    const statEl = el.createDiv({ cls: "ima-sync-readonly-hint" });
+    void this.renderCacheStat(statEl);
   }
 
   private async renderCacheStat(statEl: HTMLElement): Promise<void> {

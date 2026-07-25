@@ -17,6 +17,25 @@ import { errorMessage, logger } from "./utils/logger";
 import { ENABLE_PROBE } from "./constants";
 
 export default class ImaSyncPlugin extends Plugin {
+  // 原始 sync.svg，仅替换 fill 色值为 currentColor 以适配 Obsidian 主题
+  // 加 svg-icon class 使尺寸与 Obsidian 内置 icon 完全一致（CSS 控制，不做内联尺寸）
+  private static readonly RIBBON_ICON_SVG = `<svg class="svg-icon" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#ima-sync-ribbon-clip)">
+<mask id="ima-sync-ribbon-mask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="240">
+<circle cx="120" cy="120" r="120" fill="currentColor" opacity="0.85"/>
+</mask>
+<g mask="url(#ima-sync-ribbon-mask)">
+<ellipse cx="37.6766" cy="39.3363" rx="30" ry="44.4525" transform="rotate(40 37.6766 39.3363)" fill="currentColor"/>
+<ellipse cx="30" cy="44.4525" rx="30" ry="44.4525" transform="matrix(-0.766044 0.642788 0.642788 0.766044 196.963 -14)" fill="currentColor"/>
+</g>
+<ellipse cx="67.5549" cy="139.336" rx="30" ry="44.4525" transform="rotate(40 67.5549 139.336)" fill="currentColor"/>
+<ellipse cx="30" cy="44.4525" rx="30" ry="44.4525" transform="matrix(-0.766044 0.642788 0.642788 0.766044 166.963 86)" fill="currentColor"/>
+<ellipse cx="120.5" cy="170.5" rx="13.5" ry="8.5" fill="currentColor"/>
+<defs>
+<clipPath id="ima-sync-ribbon-clip"><rect width="240" height="240" rx="8" fill="white"/></clipPath>
+</defs>
+</svg>`;
+
   settings!: ImaSyncSettings;
   private client!: ImaClient;
   private syncManager!: SyncManager;
@@ -138,7 +157,8 @@ export default class ImaSyncPlugin extends Plugin {
     this.ribbonIconEl?.remove();
     this.ribbonIconEl = undefined;
     if (this.settings.showRibbonIcon) {
-      this.ribbonIconEl = this.addRibbonIcon("refresh-cw", "同步 ima 知识库", () => void this.triggerSync());
+      this.ribbonIconEl = this.addRibbonIcon("", "同步 ima 知识库", () => void this.triggerSync());
+      this.ribbonIconEl.innerHTML = ImaSyncPlugin.RIBBON_ICON_SVG;
     }
   }
 

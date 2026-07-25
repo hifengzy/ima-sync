@@ -6,13 +6,6 @@ var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 
-// test/mock-obsidian.ts
-var init_mock_obsidian = __esm({
-  "test/mock-obsidian.ts"() {
-    "use strict";
-  }
-});
-
 // src/constants.ts
 var DEFAULT_QPS, MAX_RETRIES, BACKOFF_BASE_MS, BACKOFF_CAP_MS, DEFAULT_TAG, ILLEGAL_FILENAME_CHARS;
 var init_constants = __esm({
@@ -28,6 +21,7 @@ var init_constants = __esm({
 });
 
 // src/utils/path.ts
+import { TFile, normalizePath } from "obsidian";
 function sanitizeFileName(name, maxLen = 120) {
   const cleaned = (name ?? "").replace(ILLEGAL_FILENAME_CHARS, "_").replace(/\s+/g, " ").trim().replace(/^\.+|\.+$/g, "");
   const truncated = cleaned.substring(0, maxLen).trim();
@@ -76,7 +70,6 @@ function clampSchedule(value, unit) {
 var init_path = __esm({
   "src/utils/path.ts"() {
     "use strict";
-    init_mock_obsidian();
     init_constants();
   }
 });
