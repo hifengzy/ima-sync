@@ -27,7 +27,7 @@ export interface ImaSyncPluginFacade extends Plugin {
 }
 
 export class ImaSyncSettingTab extends PluginSettingTab {
-  private static readonly IMA_OPEN_PLATFORM_URL = "https://ima.qq.com/openapi/";
+  private static readonly IMA_OPEN_PLATFORM_URL = "https://ima.qq.com/agent-interface";
 
   constructor(app: App, private readonly plugin: ImaSyncPluginFacade) {
     super(app, plugin);

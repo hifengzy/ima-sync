@@ -17,12 +17,22 @@ import { errorMessage, logger } from "./utils/logger";
 import { ENABLE_PROBE } from "./constants";
 
 export default class ImaSyncPlugin extends Plugin {
-  private static readonly RIBBON_ICON_SVG = `<svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="50" cy="50" r="48" fill="currentColor" opacity="0.15"/>
-<ellipse cx="22" cy="22" rx="12" ry="18" transform="rotate(40 22 22)" fill="currentColor"/>
-<ellipse cx="78" cy="22" rx="12" ry="18" transform="rotate(-40 78 22)" fill="currentColor"/>
-<ellipse cx="35" cy="58" rx="12" ry="18" transform="rotate(40 35 58)" fill="currentColor"/>
-<ellipse cx="65" cy="58" rx="12" ry="18" transform="rotate(-40 65 58)" fill="currentColor"/>
+  // 原始 sync.svg，仅替换 fill 色值为 currentColor 以适配 Obsidian 主题
+  private static readonly RIBBON_ICON_SVG = `<svg width="24" height="24" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#ima-sync-ribbon-clip)">
+<mask id="ima-sync-ribbon-mask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="240">
+<circle cx="120" cy="120" r="120" fill="currentColor" opacity="0.85"/>
+</mask>
+<g mask="url(#ima-sync-ribbon-mask)">
+<ellipse cx="37.6766" cy="39.3363" rx="30" ry="44.4525" transform="rotate(40 37.6766 39.3363)" fill="currentColor"/>
+<ellipse cx="30" cy="44.4525" rx="30" ry="44.4525" transform="matrix(-0.766044 0.642788 0.642788 0.766044 196.963 -14)" fill="currentColor"/>
+</g>
+<ellipse cx="67.5549" cy="139.336" rx="30" ry="44.4525" transform="rotate(40 67.5549 139.336)" fill="currentColor"/>
+<ellipse cx="30" cy="44.4525" rx="30" ry="44.4525" transform="matrix(-0.766044 0.642788 0.642788 0.766044 166.963 86)" fill="currentColor"/>
+<ellipse cx="120.5" cy="170.5" rx="13.5" ry="8.5" fill="currentColor"/>
+<defs>
+<clipPath id="ima-sync-ribbon-clip"><rect width="240" height="240" rx="8" fill="white"/></clipPath>
+</defs>
 </svg>`;
 
   settings!: ImaSyncSettings;
