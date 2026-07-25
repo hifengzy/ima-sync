@@ -14,8 +14,8 @@ const cases: Array<{
   label: string;
 }> = [
   { status: 403, body: { code: 200005, msg: "请求超量，请明日再试", data: {} }, expect: true, label: "403+code200005" },
-  { status: 403, body: undefined, expect: true, label: "403无body" },
-  { status: 403, body: { code: 0, msg: "success", data: {} }, expect: true, label: "403+code0（仍按配额）" },
+  { status: 403, body: undefined, expect: false, label: "403无body（非配额，不再裸403判定）" },
+  { status: 403, body: { code: 0, msg: "Forbidden", data: {} }, expect: false, label: "403权限不足（非配额）" },
   { status: 200, body: { code: 0, msg: "success", data: {} }, expect: false, label: "200正常" },
   { status: 400, body: { code: 0, msg: "bad request", data: {} }, expect: false, label: "400非配额" },
   { status: 500, body: undefined, expect: false, label: "500服务器错误" },

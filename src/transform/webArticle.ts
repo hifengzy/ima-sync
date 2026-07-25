@@ -101,34 +101,33 @@ export async function extractFromHtml(opts: {
       return degrade(title, url, readMetaContent(doc, "og:description"));
     }
     let md = turndownHtml(main.innerHTML);
+    // 将相对路径图片 URL 解析为绝对 URL（防止 /static/img.png 下载失败）
+    md = md.replace(
+      /!\[([^\]]*)\]\(((?!https?:|data:)[^)\s]+)\)/g,
+      (full, alt, relUrl) => {
+        try {
+          return `![${alt}](${new URL(relUrl, url).href})`;
+        } catch {
+          return full;
+        }
+      },
+    );
+    md = md.replace(
+      /<img\b([^>]*)\bsrc="((?!https?:|data:)[^"]+)"/gi,
+      (full, _attrs, relUrl: string) => {
+        try {
+          return full.replace(relUrl, new URL(relUrl, url).href);
+        } catch {
+          return full;
+        }
+      },
+    );
     const img = await localizeImages({ app, client, content: md, attachmentDir, docId });
     md = img.content;
     const body = `# ${title}\n\n[原文链接](${url})\n\n${md.trim()}`;
     return { body, source: url, degraded: false };
   } catch (e) {
     logger.warn(`网页正文解析失败，降级: ${url}`, e);
-    return degrade(title, url, "");
-  }
-}
-
-/** 兼容独立调用：自行抓取后提取 */
-export async function extractWebArticle(opts: {
-  app: App;
-  client: ImaClient;
-  url: string;
-  title: string;
-  docId: string;
-  attachmentDir: string;
-}): Promise<WebArticleResult> {
-  const { app, client, url, title, docId, attachmentDir } = opts;
-  try {
-    const resp = await client.fetchUrl(url);
-    if (!resp.contentType.toLowerCase().includes("text/html") || !resp.text) {
-      return degrade(title, url, (resp.text ?? "").trim().substring(0, 200));
-    }
-    return extractFromHtml({ app, client, html: resp.text, url, title, docId, attachmentDir });
-  } catch (e) {
-    logger.warn(`网页抓取失败，降级: ${url}`, e);
     return degrade(title, url, "");
   }
 }

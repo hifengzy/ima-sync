@@ -14,6 +14,7 @@ import { SyncState } from "./sync/SyncState";
 import { showToast } from "./ui/ProgressNotice";
 import { clampSchedule, scheduleToMs } from "./utils/path";
 import { errorMessage, logger } from "./utils/logger";
+import { ENABLE_PROBE } from "./constants";
 
 export default class ImaSyncPlugin extends Plugin {
   settings!: ImaSyncSettings;
@@ -22,7 +23,6 @@ export default class ImaSyncPlugin extends Plugin {
   private index!: SyncIndex;
   private readonly indexId = "ima-sync";
   private ribbonIconEl?: HTMLElement;
-  private intervalId?: number;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -39,12 +39,14 @@ export default class ImaSyncPlugin extends Plugin {
       callback: () => void this.triggerSync(),
     });
 
-    // 命令：API 探针（调试，对应方案 Phase 1）
-    this.addCommand({
-      id: "ima-api-probe",
-      name: "ima API 探针（调试，输出到控制台）",
-      callback: () => void this.runProbe(),
-    });
+    // 命令：API 探针（仅开发版可用）
+    if (ENABLE_PROBE) {
+      this.addCommand({
+        id: "ima-api-probe",
+        name: "ima API 探针（调试，输出到控制台）",
+        callback: () => void this.runProbe(),
+      });
+    }
 
     this.applyRibbon();
     this.applySchedule();
@@ -54,10 +56,6 @@ export default class ImaSyncPlugin extends Plugin {
   }
 
   onunload(): void {
-    if (this.intervalId !== undefined) {
-      window.clearInterval(this.intervalId);
-      this.intervalId = undefined;
-    }
     this.ribbonIconEl?.remove();
     this.ribbonIconEl = undefined;
     logger.info("插件已卸载");
@@ -127,17 +125,13 @@ export default class ImaSyncPlugin extends Plugin {
   // ===== 调度与 ribbon =====
 
   applySchedule(): void {
-    if (this.intervalId !== undefined) {
-      window.clearInterval(this.intervalId);
-      this.intervalId = undefined;
-    }
     if (!this.settings.scheduleEnabled) return;
     const { value, unit, clamped } = clampSchedule(this.settings.scheduleValue, this.settings.scheduleUnit);
     if (clamped) {
       logger.info(`定时频次过低，已按 5 分钟处理`);
     }
     const ms = scheduleToMs(value, unit);
-    this.intervalId = window.setInterval(() => void this.triggerSync(), ms);
+    this.registerInterval(window.setInterval(() => void this.triggerSync(), ms));
   }
 
   applyRibbon(): void {

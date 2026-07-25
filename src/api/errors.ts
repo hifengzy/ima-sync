@@ -19,11 +19,10 @@ export class ImaQuotaExceededError extends Error {
  * 实测 ima 限流返回 HTTP 403 + code=200005 + msg「请求超量，请明日再试」。
  */
 export function isQuotaExceededResponse(
-  status: number,
+  _status: number,
   body: ImaResponse<unknown> | undefined,
 ): boolean {
   if (body?.code === 200005) return true;
   if (body?.msg && body.msg.includes("请求超量")) return true;
-  if (status === 403) return true; // ima 403 实测即配额超限
   return false;
 }

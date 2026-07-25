@@ -126,7 +126,12 @@ export function normalizeTimestampToSeconds(ts: string | number | undefined | nu
   return num > 1e12 ? Math.floor(num / 1000) : num;
 }
 
-/** 秒级时间戳 -> ISO 字串 YYYY-MM-DDTHH:mm:ss */
+/** 毫秒时间戳 -> 日期字串 YYYY-MM-DD */
+export function toDateString(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 export function secondsToIso(seconds: number): string {
   if (!seconds) return "";
   const d = new Date(seconds * 1000);

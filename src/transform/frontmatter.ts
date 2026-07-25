@@ -17,7 +17,7 @@ import { DEFAULT_TAG } from "../constants";
 
 export interface FrontmatterProps {
   title: string;
-  /** 同步到 Obsidian 的时间（秒级 ISO YYYY-MM-DDTHH:mm:ss） */
+  /** 同步到 Obsidian 的日期（YYYY-MM-DD） */
   created: string;
   /** 来源 URL，无则省略 */
   source?: string;

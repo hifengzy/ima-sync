@@ -61,8 +61,10 @@ export async function localizeImages(opts: {
   content: string;
   attachmentDir: string;
   docId: string;
+  /** 下载图片时附加的请求头（如图片源需要鉴权） */
+  headers?: Record<string, string>;
 }): Promise<ImageLocalizeResult> {
-  const { app, client, content, attachmentDir, docId } = opts;
+  const { app, client, content, attachmentDir, docId, headers } = opts;
 
   // 收集所有图片 URL（markdown + html img），去重保序
   const urls: string[] = [];
@@ -112,7 +114,7 @@ export async function localizeImages(opts: {
 
     // http(s)
     try {
-      const result = await client.fetchUrl(url);
+      const result = await client.fetchUrl(url, headers);
       const ext = inferImageExt(result.contentType, url);
       const filename = buildImageFilename(docId, index, ext);
       await writeBinary(app, normalizePath(`${attachmentDir}/${filename}`), result.arrayBuffer);

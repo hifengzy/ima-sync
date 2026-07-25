@@ -17,7 +17,8 @@ export const BACKOFF_CAP_MS = 8_000;
 /** 分页大小（ima OpenAPI 限制 limit ∈ (0, 20]） */
 export const LIST_PAGE_SIZE = 20;
 
-/** 默认标签 */
+/** 调试探针开关（发布版应为 false，避免泄露 API 响应结构） */
+export const ENABLE_PROBE = false;
 export const DEFAULT_TAG = "clippings";
 
 /** 同步索引文件名（独立于 data.json） */
