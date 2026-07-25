@@ -11,6 +11,7 @@ import { requestUrl } from "obsidian";
 import {
   NOTE_BASE_URL,
   WIKI_BASE_URL,
+  REQUEST_TIMEOUT_MS,
 } from "../constants";
 import type {
   DocContentData,
@@ -58,6 +59,22 @@ export class ImaClient {
     return this.clientId.trim().length > 0 && this.apiKey.trim().length > 0;
   }
 
+  /** 带超时的 requestUrl 包装（Obsidian 运行时支持 timeout，类型定义缺失，用 never 绕过 -- NFR-1.2） */
+  private async timeoutRequest(
+    url: string,
+    method: string,
+    headers: Record<string, string>,
+    body?: string,
+  ): Promise<{ status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string> }> {
+    const params: Record<string, unknown> = {
+      url, method, headers, throw: false, timeout: REQUEST_TIMEOUT_MS,
+    };
+    if (body !== undefined) params.body = body;
+    return requestUrl(params as never) as unknown as {
+      status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string>;
+    };
+  }
+
   /** 统一 POST 请求（经节流 + 重试） */
   private async request<T>(baseUrl: string, endpoint: string, body: unknown): Promise<T> {
     if (!this.isConfigured()) {
@@ -65,38 +82,28 @@ export class ImaClient {
     }
     return this.limiter.execute<T>(async () => {
       try {
-        const resp = await requestUrl({
-          url: `${baseUrl}/${endpoint}`,
-          method: "POST",
-          headers: {
+        const resp = await this.timeoutRequest(
+          `${baseUrl}/${endpoint}`,
+          "POST",
+          {
             "Content-Type": "application/json",
             "ima-openapi-clientid": this.clientId,
             "ima-openapi-apikey": this.apiKey,
           },
-          body: JSON.stringify(body),
-          throw: false,
-        });
+          JSON.stringify(body),
+        );
         const status = resp.status ?? 200;
         if (isRetryableStatus(status)) {
           return { kind: "retryable", error: `[${endpoint}] 请求失败 (${status})` };
         }
         if (status >= 400) {
-          // 优先用 resp.text 手动解析（Obsidian requestUrl 在 4xx 时 resp.json 可能不填充）
-          let body: ImaResponse<unknown> | undefined;
-          try {
-            body = resp.json as ImaResponse<unknown> | undefined;
-          } catch {
-            body = undefined;
+          let imaBody: ImaResponse<unknown> | undefined;
+          try { imaBody = resp.json as ImaResponse<unknown> | undefined; } catch { imaBody = undefined; }
+          if (!imaBody && resp.text) {
+            try { imaBody = JSON.parse(resp.text) as ImaResponse<unknown>; } catch { imaBody = undefined; }
           }
-          if (!body && resp.text) {
-            try {
-              body = JSON.parse(resp.text) as ImaResponse<unknown>;
-            } catch {
-              body = undefined;
-            }
-          }
-          const msg = body?.msg;
-          if (isQuotaExceededResponse(status, body)) {
+          const msg = imaBody?.msg;
+          if (isQuotaExceededResponse(status, imaBody)) {
             return { kind: "quota", error: msg || "请求超量，请明日再试" };
           }
           return {
@@ -105,16 +112,12 @@ export class ImaClient {
           };
         }
         const json = resp.json as ImaResponse<T> | undefined;
-        if (!json) {
-          return { kind: "retryable", error: `[${endpoint}] 响应解析失败` };
-        }
+        if (!json) return { kind: "retryable", error: `[${endpoint}] 响应解析失败` };
         if (json.code !== 0) {
-          // 业务错误（含 401 凭证无效）：不重试，直接抛出 msg（NFR-3.3 不泄露细节）
           return { kind: "fatal", error: json.msg || `[${endpoint}] 业务错误 code=${json.code}` };
         }
         return { kind: "success", value: json.data };
       } catch (e) {
-        // 网络错误（连接/超时）可重试
         return { kind: "retryable", error: `[${endpoint}] 网络错误: ${errorMessage(e)}` };
       }
     });
@@ -124,12 +127,7 @@ export class ImaClient {
   async fetchUrl(url: string, headers?: Record<string, string>): Promise<FetchResult> {
     return this.limiter.execute<FetchResult>(async () => {
       try {
-        const resp = await requestUrl({
-          url,
-          method: "GET",
-          headers: headers ?? {},
-          throw: false,
-        });
+        const resp = await this.timeoutRequest(url, "GET", headers ?? {});
         const status = resp.status ?? 200;
         if (isRetryableStatus(status)) {
           return { kind: "retryable", error: `下载失败 (${status})` };
@@ -140,12 +138,7 @@ export class ImaClient {
         const contentType = (resp.headers?.["content-type"] ?? "") as string;
         return {
           kind: "success",
-          value: {
-            arrayBuffer: resp.arrayBuffer,
-            text: resp.text,
-            status,
-            contentType,
-          },
+          value: { arrayBuffer: resp.arrayBuffer, text: resp.text, status, contentType },
         };
       } catch (e) {
         return { kind: "retryable", error: `下载网络错误: ${errorMessage(e)}` };

@@ -43,3 +43,36 @@ export async function requestUrl(param: MockRequestParam): Promise<MockResponse>
   const arrayBuffer = new TextEncoder().encode(text).buffer as ArrayBuffer;
   return { status: resp.status, json, text, arrayBuffer, headers };
 }
+
+// ===== Obsidian API stubs for unit tests =====
+
+export class TFile {
+  path: string;
+  basename: string;
+  extension: string;
+  constructor(path: string) {
+    this.path = path;
+    const parts = path.split("/");
+    const name = parts[parts.length - 1];
+    const dot = name.lastIndexOf(".");
+    this.basename = dot > 0 ? name.substring(0, dot) : name;
+    this.extension = dot > 0 ? name.substring(dot + 1) : "";
+  }
+}
+
+export class Notice {
+  constructor(_message: string, _duration?: number) {}
+}
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export class App {}
+
+export function normalizePath(path: string): string {
+  return path.replace(/\/+/g, "/").replace(/\/$/, "") || "/";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export class Plugin {}
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export class PluginSettingTab {}

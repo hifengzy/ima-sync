@@ -98,6 +98,7 @@ export class SyncManager {
         if (this.quotaExceeded) break;
         try {
           await this.syncKnowledgeBase(kb);
+          await this.index.save();
         } catch (e) {
           if (this.handleQuotaError(e)) break;
           this.recordFailure(`知识库「${kb.kb_name}」`, e);
@@ -107,6 +108,7 @@ export class SyncManager {
       if (settings.syncNotes && !this.quotaExceeded) {
         try {
           await this.syncNotes();
+          await this.index.save();
         } catch (e) {
           if (!this.handleQuotaError(e)) {
             this.recordFailure("独立笔记", e);
@@ -114,7 +116,6 @@ export class SyncManager {
         }
       }
 
-      await this.index.save();
       this.emitSummary();
     } catch (e) {
       if (!this.handleQuotaError(e)) {
@@ -412,9 +413,20 @@ export class SyncManager {
   /** 更新已存在文件：保留 frontmatter 块 + 覆盖正文，再 processFrontMatter 更新字段（保留用户自定义属性） */
   private async updateFile(file: TFile, body: string, props: FrontmatterProps): Promise<void> {
     const oldContent = await this.app.vault.read(file);
-    const fmMatch = oldContent.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/);
-    const newContent = fmMatch
-      ? `${fmMatch[0]}\n${body.trimStart()}\n`
+    // 按行拆分定位 frontmatter 边界，避免正则 --- 内容匹配脆弱性
+    const lines = oldContent.split(/\r?\n/);
+    let fmEnd = -1;
+    if (lines[0]?.trim() === "---") {
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === "---") {
+          fmEnd = i;
+          break;
+        }
+      }
+    }
+    const hasFrontmatter = fmEnd >= 0;
+    const newContent = hasFrontmatter
+      ? `${lines.slice(0, fmEnd + 1).join("\n")}\n\n${body.trimStart()}\n`
       : `---\n${buildFrontmatterYaml(props)}\n---\n\n${body}\n`;
     await this.app.vault.modify(file, newContent);
     await updateFrontmatter(this.app, file, props);
