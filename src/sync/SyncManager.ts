@@ -27,7 +27,7 @@ import {
   normalizeTimestampToSeconds,
   resolveAttachmentDir,
   sanitizeFileName,
-  timestampToIso,
+  toDateString,
 } from "../utils/path";
 import { logger, errorMessage } from "../utils/logger";
 import { convertToMarkdown } from "../transform/htmlToMarkdown";
@@ -324,7 +324,7 @@ export class SyncManager {
   private buildProps(args: { title: string; source?: string; docId: string }): FrontmatterProps {
     return {
       title: args.title || `untitled-${getDocIdPrefix(args.docId)}`,
-      created: timestampToIso(Date.now()),
+      created: toDateString(Date.now()),
       source: args.source,
       tags: [DEFAULT_TAG],
     };
