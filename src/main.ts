@@ -18,7 +18,8 @@ import { ENABLE_PROBE } from "./constants";
 
 export default class ImaSyncPlugin extends Plugin {
   // 原始 sync.svg，仅替换 fill 色值为 currentColor 以适配 Obsidian 主题
-  private static readonly RIBBON_ICON_SVG = `<svg width="24" height="24" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  // 加 svg-icon class 使尺寸与 Obsidian 内置 icon 完全一致（CSS 控制，不做内联尺寸）
+  private static readonly RIBBON_ICON_SVG = `<svg class="svg-icon" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g clip-path="url(#ima-sync-ribbon-clip)">
 <mask id="ima-sync-ribbon-mask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="240">
 <circle cx="120" cy="120" r="120" fill="currentColor" opacity="0.85"/>
