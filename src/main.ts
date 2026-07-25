@@ -17,6 +17,14 @@ import { errorMessage, logger } from "./utils/logger";
 import { ENABLE_PROBE } from "./constants";
 
 export default class ImaSyncPlugin extends Plugin {
+  private static readonly RIBBON_ICON_SVG = `<svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="50" cy="50" r="48" fill="currentColor" opacity="0.15"/>
+<ellipse cx="22" cy="22" rx="12" ry="18" transform="rotate(40 22 22)" fill="currentColor"/>
+<ellipse cx="78" cy="22" rx="12" ry="18" transform="rotate(-40 78 22)" fill="currentColor"/>
+<ellipse cx="35" cy="58" rx="12" ry="18" transform="rotate(40 35 58)" fill="currentColor"/>
+<ellipse cx="65" cy="58" rx="12" ry="18" transform="rotate(-40 65 58)" fill="currentColor"/>
+</svg>`;
+
   settings!: ImaSyncSettings;
   private client!: ImaClient;
   private syncManager!: SyncManager;
@@ -138,7 +146,8 @@ export default class ImaSyncPlugin extends Plugin {
     this.ribbonIconEl?.remove();
     this.ribbonIconEl = undefined;
     if (this.settings.showRibbonIcon) {
-      this.ribbonIconEl = this.addRibbonIcon("refresh-cw", "同步 ima 知识库", () => void this.triggerSync());
+      this.ribbonIconEl = this.addRibbonIcon("", "同步 ima 知识库", () => void this.triggerSync());
+      this.ribbonIconEl.innerHTML = ImaSyncPlugin.RIBBON_ICON_SVG;
     }
   }
 
