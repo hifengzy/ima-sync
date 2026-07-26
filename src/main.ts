@@ -36,14 +36,10 @@ export default class ImaSyncPlugin extends Plugin {
 </defs>
 </svg>`;
 
-  // Uses setAttr/setAttrs instead of innerHTML for Obsidian security audit compliance
+  // Uses createContextualFragment instead of innerHTML for Obsidian security audit compliance
   private static applyRibbonSvg(el: HTMLElement): void {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(ImaSyncPlugin.RIBBON_ICON_SVG, "image/svg+xml");
-    const parsed = doc.documentElement;
-    if (!parsed || parsed.nodeName !== "svg") return;
-    const imported = document.importNode(parsed, true);
-    el.appendChild(imported);
+    const frag = document.createRange().createContextualFragment(ImaSyncPlugin.RIBBON_ICON_SVG);
+    el.appendChild(frag);
   }
 
   settings!: ImaSyncSettings;
