@@ -19,27 +19,78 @@ import { ENABLE_PROBE } from "./constants";
 export default class ImaSyncPlugin extends Plugin {
   // 原始 sync.svg，仅替换 fill 色值为 currentColor 以适配 Obsidian 主题
   // 加 svg-icon class 使尺寸与 Obsidian 内置 icon 完全一致（CSS 控制，不做内联尺寸）
-  private static readonly RIBBON_ICON_SVG = `<svg class="svg-icon" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#ima-sync-ribbon-clip)">
-<mask id="ima-sync-ribbon-mask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="240">
-<circle cx="120" cy="120" r="120" fill="currentColor" opacity="0.85"/>
-</mask>
-<g mask="url(#ima-sync-ribbon-mask)">
-<ellipse cx="37.6766" cy="39.3363" rx="30" ry="44.4525" transform="rotate(40 37.6766 39.3363)" fill="currentColor"/>
-<ellipse cx="30" cy="44.4525" rx="30" ry="44.4525" transform="matrix(-0.766044 0.642788 0.642788 0.766044 196.963 -14)" fill="currentColor"/>
-</g>
-<ellipse cx="67.5549" cy="139.336" rx="30" ry="44.4525" transform="rotate(40 67.5549 139.336)" fill="currentColor"/>
-<ellipse cx="30" cy="44.4525" rx="30" ry="44.4525" transform="matrix(-0.766044 0.642788 0.642788 0.766044 166.963 86)" fill="currentColor"/>
-<ellipse cx="120.5" cy="170.5" rx="13.5" ry="8.5" fill="currentColor"/>
-<defs>
-<clipPath id="ima-sync-ribbon-clip"><rect width="240" height="240" rx="8" fill="white"/></clipPath>
-</defs>
-</svg>`;
 
-  // Uses createContextualFragment instead of innerHTML for Obsidian security audit compliance
+  // Imports trusted static SVG via createContextualFragment for security audit compliance
   private static applyRibbonSvg(el: HTMLElement): void {
-    const frag = document.createRange().createContextualFragment(ImaSyncPlugin.RIBBON_ICON_SVG);
-    el.appendChild(frag);
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class", "svg-icon");
+    svg.setAttribute("viewBox", "0 0 240 240");
+    svg.setAttribute("fill", "none");
+
+    const g = document.createElementNS(ns, "g");
+    g.setAttribute("clip-path", "url(#ima-sync-ribbon-clip)");
+
+    const mask = document.createElementNS(ns, "mask");
+    mask.setAttribute("id", "ima-sync-ribbon-mask");
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("x", "0");
+    mask.setAttribute("y", "0");
+    mask.setAttribute("width", "240");
+    mask.setAttribute("height", "240");
+    const mCircle = document.createElementNS(ns, "circle");
+    mCircle.setAttribute("cx", "120");
+    mCircle.setAttribute("cy", "120");
+    mCircle.setAttribute("r", "120");
+    mCircle.setAttribute("fill", "currentColor");
+    mCircle.setAttribute("opacity", "0.85");
+    mask.appendChild(mCircle);
+
+    const mg = document.createElementNS(ns, "g");
+    mg.setAttribute("mask", "url(#ima-sync-ribbon-mask)");
+    const e1 = document.createElementNS(ns, "ellipse");
+    e1.setAttribute("cx", "37.6766"); e1.setAttribute("cy", "39.3363");
+    e1.setAttribute("rx", "30"); e1.setAttribute("ry", "44.4525");
+    e1.setAttribute("transform", "rotate(40 37.6766 39.3363)");
+    e1.setAttribute("fill", "currentColor");
+    const e2 = document.createElementNS(ns, "ellipse");
+    e2.setAttribute("cx", "30"); e2.setAttribute("cy", "44.4525");
+    e2.setAttribute("rx", "30"); e2.setAttribute("ry", "44.4525");
+    e2.setAttribute("transform", "matrix(-0.766044 0.642788 0.642788 0.766044 196.963 -14)");
+    e2.setAttribute("fill", "currentColor");
+    mg.appendChild(e1); mg.appendChild(e2);
+
+    const e3 = document.createElementNS(ns, "ellipse");
+    e3.setAttribute("cx", "67.5549"); e3.setAttribute("cy", "139.336");
+    e3.setAttribute("rx", "30"); e3.setAttribute("ry", "44.4525");
+    e3.setAttribute("transform", "rotate(40 67.5549 139.336)");
+    e3.setAttribute("fill", "currentColor");
+    const e4 = document.createElementNS(ns, "ellipse");
+    e4.setAttribute("cx", "30"); e4.setAttribute("cy", "44.4525");
+    e4.setAttribute("rx", "30"); e4.setAttribute("ry", "44.4525");
+    e4.setAttribute("transform", "matrix(-0.766044 0.642788 0.642788 0.766044 166.963 86)");
+    e4.setAttribute("fill", "currentColor");
+    const e5 = document.createElementNS(ns, "ellipse");
+    e5.setAttribute("cx", "120.5"); e5.setAttribute("cy", "170.5");
+    e5.setAttribute("rx", "13.5"); e5.setAttribute("ry", "8.5");
+    e5.setAttribute("fill", "currentColor");
+
+    g.appendChild(mask); g.appendChild(mg);
+    g.appendChild(e3); g.appendChild(e4); g.appendChild(e5);
+
+    const defs = document.createElementNS(ns, "defs");
+    const clip = document.createElementNS(ns, "clipPath");
+    clip.setAttribute("id", "ima-sync-ribbon-clip");
+    const rect = document.createElementNS(ns, "rect");
+    rect.setAttribute("width", "240");
+    rect.setAttribute("height", "240");
+    rect.setAttribute("rx", "8");
+    rect.setAttribute("fill", "white");
+    clip.appendChild(rect);
+    defs.appendChild(clip);
+
+    svg.appendChild(g); svg.appendChild(defs);
+    el.appendChild(svg);
   }
 
   settings!: ImaSyncSettings;
