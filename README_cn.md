@@ -149,7 +149,7 @@ src/
 ├── utils/            # 工具
 │   ├── path.ts           # 路径处理、文件名校验、附件目录解析
 │   ├── rateLimiter.ts    # 2 QPS 限流
-│   └── logger.ts         # 带 [ima-sync] 前缀的控制台日志
+│   └── logger.ts         # 带 [imasync] 前缀的控制台日志
 ├── main.ts           # 插件入口：生命周期、命令、ribbon、定时器
 └── constants.ts      # 端点 URL、枚举、默认值
 ```

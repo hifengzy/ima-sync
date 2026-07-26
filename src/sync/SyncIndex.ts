@@ -5,7 +5,7 @@
  * 主键 doc_id，记录本地路径、kb_id、标题、media_type、ima 侧 update_time、synced_at。
  * 仅用于智能更新的 update_time 比对，不持久化分页游标。
  */
-import { Notice, type App } from "obsidian";
+import { Notice, normalizePath, type App } from "obsidian";
 import { SYNC_INDEX_FILENAME } from "../constants";
 import { logger } from "../utils/logger";
 
@@ -28,9 +28,8 @@ export class SyncIndex {
   private readonly indexPath: string;
   private dirty = false;
 
-  constructor(private readonly app: App, pluginId: string) {
-    const configDir = app.vault.configDir;
-    this.indexPath = `${configDir}/plugins/${pluginId}/${SYNC_INDEX_FILENAME}`;
+  constructor(private readonly app: App, pluginDir: string) {
+    this.indexPath = normalizePath(`${pluginDir}/${SYNC_INDEX_FILENAME}`);
   }
 
   async load(): Promise<void> {
@@ -41,7 +40,7 @@ export class SyncIndex {
       }
     } catch (e) {
       logger.warn("同步索引加载失败，使用空索引", e);
-      new Notice("ima-sync: 同步索引文件已损坏，将执行全量同步。如产生重复文件，请先清空缓存后再同步。", 10000);
+      new Notice("[imasync] 同步索引文件已损坏，将执行全量同步。如产生重复文件，请先清空缓存后再同步。", 10000);
       this.entries = {};
     }
   }
