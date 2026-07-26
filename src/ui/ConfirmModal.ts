@@ -37,7 +37,7 @@ export class ConfirmModal extends Modal {
       try {
         await this.opts.onConfirm();
       } catch (e) {
-        console.error("[ima-sync] 确认操作执行失败", e);
+        console.error("[imasync] 确认操作执行失败", e);
       }
     };
   }

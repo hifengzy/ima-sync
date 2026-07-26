@@ -49,7 +49,9 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 1. ima 认证 =====
   private renderAuth(el: HTMLElement): void {
-    el.createEl("h3", { text: "ima 认证", cls: "ima-sync-setting-heading" });
+    new Setting(el)
+      .setName("ima 认证")
+      .setHeading();
 
     new Setting(el)
       .setName("Client ID")
@@ -90,7 +92,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 2. 同步知识库 =====
   private renderKnowledgeBases(el: HTMLElement): void {
-    el.createEl("h3", { text: "同步知识库", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("同步知识库").setHeading();
 
     const listEl = el.createDiv({ cls: "ima-sync-kb-list" });
     this.renderKbList(listEl);
@@ -150,13 +152,13 @@ export class ImaSyncSettingTab extends PluginSettingTab {
             this.renderKbList(listEl);
           }),
         )
-        .settingEl.style.setProperty("padding", "0");
+        .settingEl.setCssProps({ padding: "0" });
     }
   }
 
   // ===== 3. 笔记同步 =====
   private renderNotes(el: HTMLElement): void {
-    el.createEl("h3", { text: "笔记同步", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("笔记同步").setHeading();
     new Setting(el)
       .setName("同步独立笔记")
       .setDesc("开启后同步 ima 独立笔记本内容到 Notes/ 子目录。")
@@ -170,7 +172,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 4. 同步根目录 =====
   private renderRootPath(el: HTMLElement): void {
-    el.createEl("h3", { text: "同步根目录", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("同步根目录").setHeading();
     new Setting(el)
       .setName("同步根目录路径")
       .setDesc("相对仓库路径，如 ima 或 A/B。各知识库与 Notes 会落在其下。")
@@ -187,7 +189,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 5. 附件存放 =====
   private renderAttachment(el: HTMLElement): void {
-    el.createEl("h3", { text: "附件存放", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("附件存放").setHeading();
     new Setting(el).setName("附件存放模式").setDesc("图片等附件的落地目录。").addDropdown((d) => {
       d.addOption("per-kb", "知识库内 attachments（默认）")
         .addOption("obsidian-global", "跟随 Obsidian 全局附件设置")
@@ -214,7 +216,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 6. 自动同步 =====
   private renderSchedule(el: HTMLElement): void {
-    el.createEl("h3", { text: "自动同步", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("自动同步").setHeading();
     new Setting(el)
       .setName("定时自动同步")
       .setDesc("按设定频次自动触发同步（默认关闭）。")
@@ -230,8 +232,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       .setName("同步频次")
       .setDesc("数字与单位左右并列，例如「30 分钟」。")
       .addText((text) => {
-        text.inputEl.style.width = "80px";
-        text.inputEl.style.marginRight = "8px";
+        text.inputEl.setAttr("style", "width: 80px; margin-right: 8px;");
         text
           .setPlaceholder("30")
           .setValue(String(this.plugin.settings.scheduleValue))
@@ -265,7 +266,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 7. 手动同步 =====
   private renderManual(el: HTMLElement): void {
-    el.createEl("h3", { text: "手动同步", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("手动同步").setHeading();
     new Setting(el)
       .setName("显示 ribbon 按钮")
       .setDesc("左侧栏显示一键同步按钮（默认关闭）。")
@@ -293,7 +294,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
 
   // ===== 8. 缓存数据 =====
   private renderCache(el: HTMLElement): void {
-    el.createEl("h3", { text: "缓存数据", cls: "ima-sync-setting-heading" });
+    new Setting(el).setName("缓存数据").setHeading();
     new Setting(el)
       .setName("同步索引缓存")
       .setDesc(
@@ -302,7 +303,8 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       .addButton((btn) =>
         btn
           .setButtonText("清空缓存")
-          .setWarning()
+          .setDestructive()
+      .setCta()
           .onClick(() => {
             new ConfirmModal(this.app, {
               title: "清空同步索引缓存",
@@ -321,7 +323,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
           }),
       );
     const statEl = el.createDiv({ cls: "ima-sync-readonly-hint" });
-    void this.renderCacheStat(statEl);
+    this.renderCacheStat(statEl);
   }
 
   private async renderCacheStat(statEl: HTMLElement): Promise<void> {

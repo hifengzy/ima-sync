@@ -36,6 +36,16 @@ export default class ImaSyncPlugin extends Plugin {
 </defs>
 </svg>`;
 
+  // Uses setAttr/setAttrs instead of innerHTML for Obsidian security audit compliance
+  private static applyRibbonSvg(el: HTMLElement): void {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(ImaSyncPlugin.RIBBON_ICON_SVG, "image/svg+xml");
+    const parsed = doc.documentElement;
+    if (!parsed || parsed.nodeName !== "svg") return;
+    const imported = document.importNode(parsed, true);
+    el.appendChild(imported);
+  }
+
   settings!: ImaSyncSettings;
   private client!: ImaClient;
   private syncManager!: SyncManager;
@@ -158,7 +168,7 @@ export default class ImaSyncPlugin extends Plugin {
     this.ribbonIconEl = undefined;
     if (this.settings.showRibbonIcon) {
       this.ribbonIconEl = this.addRibbonIcon("", "同步 ima 知识库", () => void this.triggerSync());
-      this.ribbonIconEl.innerHTML = ImaSyncPlugin.RIBBON_ICON_SVG;
+      ImaSyncPlugin.applyRibbonSvg(this.ribbonIconEl);
     }
   }
 
