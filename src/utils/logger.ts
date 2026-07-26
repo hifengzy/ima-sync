@@ -3,20 +3,20 @@
  * 统一入口，方便后续切换为文件日志或可观测层。
  */
 
-const PREFIX = "[ima-sync]";
+const LABEL = "[imasync]";
 
 export const logger = {
   debug(...args: unknown[]): void {
-    console.debug(PREFIX, ...args);
+    console.debug(LABEL, ...args);
   },
   info(...args: unknown[]): void {
-    console.log(PREFIX, ...args);
+    console.info(LABEL, ...args);
   },
   warn(...args: unknown[]): void {
-    console.warn(PREFIX, ...args);
+    console.warn(LABEL, ...args);
   },
   error(...args: unknown[]): void {
-    console.error(PREFIX, ...args);
+    console.error(LABEL, ...args);
   },
 };
 

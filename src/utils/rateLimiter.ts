@@ -15,7 +15,7 @@ export type RequestOutcome<T> =
   | { kind: "quota"; error: string };
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 /** 指数退避时长：1s -> 2s -> 4s，上限 8s */
@@ -91,8 +91,6 @@ export class RateLimiter {
       () => undefined,
       () => undefined,
     );
-    return (run as Promise<T>).catch((err) => {
-      throw err;
-    });
+    return run as Promise<T>;
   }
 }

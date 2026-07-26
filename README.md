@@ -1,4 +1,4 @@
-# ima.copilot To Obsidian
+# Ima Copilot Sync
 
 [![GitHub release](https://img.shields.io/github/v/release/hifengzy/ima-sync?include_prereleases)](https://github.com/hifengzy/ima-sync/releases)
 [![Obsidian](https://img.shields.io/badge/Obsidian-1.6.0%2B-7C3AED)](https://obsidian.md)

@@ -70,7 +70,7 @@ export class ImaClient {
       url, method, headers, throw: false, timeout: REQUEST_TIMEOUT_MS,
     };
     if (body !== undefined) params.body = body;
-    return requestUrl(params as never) as unknown as {
+    return requestUrl(params as unknown as Parameters<typeof requestUrl>[0]) as unknown as {
       status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string>;
     };
   }
@@ -135,7 +135,7 @@ export class ImaClient {
         if (status >= 400) {
           return { kind: "fatal", error: `下载失败 (${status})` };
         }
-        const contentType = (resp.headers?.["content-type"] ?? "") as string;
+        const contentType: string = resp.headers?.["content-type"] ?? "";
         return {
           kind: "success",
           value: { arrayBuffer: resp.arrayBuffer, text: resp.text, status, contentType },
