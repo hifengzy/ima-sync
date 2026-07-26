@@ -40,7 +40,7 @@ export default class ImaSyncPlugin extends Plugin {
   private client!: ImaClient;
   private syncManager!: SyncManager;
   private index!: SyncIndex;
-  private readonly indexId = "ima-sync";
+  private readonly indexId = "imasync";
   private ribbonIconEl?: HTMLElement;
 
   async onload(): Promise<void> {
