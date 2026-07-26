@@ -3,7 +3,7 @@
   "name": "Ima Copilot Sync",
   "version": "0.1.0",
   "minAppVersion": "1.6.0",
-  "description": "将腾讯 ima 知识库与笔记单向同步到本地仓库，自动转换为 Markdown 并下载附件。",
+  "description": "Import Tencent IMA knowledge base and notes, automatically convert to Markdown and download attachments.",
   "author": "hifengzy",
   "authorUrl": "https://github.com/hifengzy",
   "isDesktopOnly": false
