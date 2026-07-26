@@ -1,7 +1,7 @@
 /**
  * 插件入口：生命周期、命令、ribbon、定时器、设置页注册（对应开发方案 2.2 / 7.3 / 7.4）。
  */
-import { Plugin } from "obsidian";
+import { Plugin, normalizePath } from "obsidian";
 import { ImaClient } from "./api/imaClient";
 import { ImaApi } from "./api/endpoints";
 import type { KbInfo } from "./api/types";
@@ -97,14 +97,14 @@ export default class ImaSyncPlugin extends Plugin {
   private client!: ImaClient;
   private syncManager!: SyncManager;
   private index!: SyncIndex;
-  private readonly indexId = "imasync";
   private ribbonIconEl?: HTMLElement;
 
   async onload(): Promise<void> {
     await this.loadSettings();
 
     this.client = new ImaClient(this.settings.clientId, this.settings.apiKey);
-    this.index = new SyncIndex(this.app, this.indexId);
+    const pluginDir = this.manifest.dir ?? normalizePath(`${this.app.vault.configDir}/plugins/ima-sync`);
+    this.index = new SyncIndex(this.app, pluginDir);
     const state = new SyncState();
     this.syncManager = new SyncManager(this.app, this.client, this.index, state, () => this.settings);
 
