@@ -66,11 +66,14 @@ export class ImaClient {
     headers: Record<string, string>,
     body?: string,
   ): Promise<{ status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string> }> {
-    const params: Record<string, unknown> = {
-      url, method, headers, throw: false, timeout: REQUEST_TIMEOUT_MS,
-    };
-    if (body !== undefined) params.body = body;
-    return requestUrl(params as unknown as Parameters<typeof requestUrl>[0]) as unknown as {
+    return requestUrl({
+      url, method, headers, throw: false,
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
+      body,
+      /* Obsidian supports timeout at runtime but the type-def is missing it */
+      // @ts-expect-error timeout is accepted at runtime
+      timeout: REQUEST_TIMEOUT_MS,
+    }) as unknown as {
       status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string>;
     };
   }

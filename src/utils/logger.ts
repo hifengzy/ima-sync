@@ -10,7 +10,8 @@ export const logger = {
     console.debug(LABEL, ...args);
   },
   info(...args: unknown[]): void {
-    console.info(LABEL, ...args);
+    void args;
+    /* silenced: avoid unnecessary console output for end users */
   },
   warn(...args: unknown[]): void {
     console.warn(LABEL, ...args);

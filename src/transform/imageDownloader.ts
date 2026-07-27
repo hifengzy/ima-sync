@@ -130,13 +130,14 @@ export async function localizeImages(opts: {
   // 替换引用：markdown ![alt](url) -> ![[filename|alt]]；html <img src=url> -> ![[filename]]
   let replaced = content.replace(mdImgRe, (full, alt, url) => {
     const fn = urlToFilename.get(url);
-    if (!fn) return full;
+    if (fn == null) return full;
     const altText = alt ? `|${alt}` : "";
     return `![[${fn}${altText}]]`;
   });
   replaced = replaced.replace(htmlImgRe, (full, url) => {
     const fn = urlToFilename.get(url);
-    return fn ? `![[${fn}]]` : full;
+    if (fn == null) return full;
+    return `![[${fn}]]`;
   });
 
   return { content: replaced, downloaded, failed };

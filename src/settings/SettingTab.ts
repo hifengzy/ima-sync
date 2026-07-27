@@ -47,6 +47,11 @@ export class ImaSyncSettingTab extends PluginSettingTab {
     this.renderCache(containerEl);
   }
 
+  /** Declarative settings stub: return empty so Obsidian falls back to display(). */
+  getSettingDefinitions(): ReturnType<PluginSettingTab["getSettingDefinitions"]> {
+    return [];
+  }
+
   // ===== 1. ima 认证 =====
   private renderAuth(el: HTMLElement): void {
     new Setting(el)
@@ -101,7 +106,8 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       btn
         .setButtonText("添加知识库")
         .setCta()
-        .onClick(async () => {
+        .onClick(() => {
+          void (async () => {
           btn.setDisabled(true);
           try {
             const kbs = await this.plugin.listAllKnowledgeBases();
@@ -126,6 +132,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
           } finally {
             btn.setDisabled(false);
           }
+          })();
         }),
     );
   }
@@ -134,7 +141,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
     listEl.empty();
     const kbs = this.plugin.settings.selectedKbs;
     if (kbs.length === 0) {
-      listEl.createEl("div", { text: "暂未添加知识库，点击下方「添加知识库」", cls: "ima-sync-readonly-hint" });
+      listEl.createDiv({ text: "暂未添加知识库，点击下方「添加知识库」", cls: "ima-sync-readonly-hint" });
       return;
     }
     for (const kb of kbs) {
@@ -152,7 +159,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
             this.renderKbList(listEl);
           }),
         )
-        .settingEl.setCssProps({ padding: "0" });
+        .settingEl.addClass("ima-sync-kb-delete-item");
     }
   }
 
@@ -211,7 +218,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
     const hint = globalDir
       ? `当前全局附件目录：${globalDir}`
       : "未配置，同步时将回退至各知识库内 attachments";
-    hintEl.createEl("div", { text: hint, cls: "ima-sync-readonly-hint" });
+    hintEl.createDiv({ text: hint, cls: "ima-sync-readonly-hint" });
   }
 
   // ===== 6. 自动同步 =====
@@ -232,7 +239,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       .setName("同步频次")
       .setDesc("数字与单位左右并列，例如「30 分钟」。")
       .addText((text) => {
-        text.inputEl.setAttr("style", "width: 80px; margin-right: 8px;");
+        text.inputEl.addClass("ima-sync-schedule-input");
         text
           .setPlaceholder("30")
           .setValue(String(this.plugin.settings.scheduleValue))
@@ -323,7 +330,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
           }),
       );
     const statEl = el.createDiv({ cls: "ima-sync-readonly-hint" });
-    this.renderCacheStat(statEl);
+    void this.renderCacheStat(statEl);
   }
 
   private async renderCacheStat(statEl: HTMLElement): Promise<void> {
