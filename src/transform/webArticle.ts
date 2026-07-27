@@ -104,7 +104,7 @@ export async function extractFromHtml(opts: {
     // 将相对路径图片 URL 解析为绝对 URL（防止 /static/img.png 下载失败）
     md = md.replace(
       /!\[([^\]]*)\]\(((?!https?:|data:)[^)\s]+)\)/g,
-      (full, alt, relUrl) => {
+      (full: string, alt: string, relUrl: string) => {
         if (!relUrl) return full;
         try {
           return `![${alt}](${new URL(relUrl, url).href})`;

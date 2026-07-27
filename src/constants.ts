@@ -48,8 +48,9 @@ export enum MediaType {
 }
 
 /** 判定是否为文件夹 */
-export const isFolder = (mediaType: number): boolean => mediaType === MediaType.FOLDER;
+export const isFolder = (mediaType: number): boolean =>
+  (mediaType as MediaType) === MediaType.FOLDER;
 
 /** 判定是否为知识库内笔记（media_type=11 或带 notebook_id） */
 export const isNoteType = (mediaType: number, notebookId?: string | null): boolean =>
-  mediaType === MediaType.NOTE || Boolean(notebookId);
+  (mediaType as MediaType) === MediaType.NOTE || Boolean(notebookId);
