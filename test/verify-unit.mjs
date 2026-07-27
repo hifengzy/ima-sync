@@ -129,7 +129,7 @@ var init_errors = __esm({
 
 // src/utils/rateLimiter.ts
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 function computeBackoff(attempt, base = BACKOFF_BASE_MS, cap = BACKOFF_CAP_MS) {
   return Math.min(base * Math.pow(2, attempt - 1), cap);
@@ -194,9 +194,7 @@ var init_rateLimiter = __esm({
           () => void 0,
           () => void 0
         );
-        return run.catch((err) => {
-          throw err;
-        });
+        return run;
       }
     };
   }

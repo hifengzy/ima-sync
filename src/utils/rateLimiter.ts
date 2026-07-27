@@ -91,6 +91,6 @@ export class RateLimiter {
       () => undefined,
       () => undefined,
     );
-    return run as Promise<T>;
+    return run;
   }
 }

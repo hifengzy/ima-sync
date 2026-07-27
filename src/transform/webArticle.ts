@@ -100,11 +100,12 @@ export async function extractFromHtml(opts: {
     if ((main.textContent ?? "").trim().length < 80) {
       return degrade(title, url, readMetaContent(doc, "og:description"));
     }
-    let md = turndownHtml(main.innerHTML);
+    let md = turndownHtml(new XMLSerializer().serializeToString(main));
     // 将相对路径图片 URL 解析为绝对 URL（防止 /static/img.png 下载失败）
     md = md.replace(
       /!\[([^\]]*)\]\(((?!https?:|data:)[^)\s]+)\)/g,
       (full, alt, relUrl) => {
+        if (!relUrl) return full;
         try {
           return `![${alt}](${new URL(relUrl, url).href})`;
         } catch {

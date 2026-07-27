@@ -24,6 +24,15 @@
   border-top: 1px solid var(--background-modifier-border);
 }
 
+.ima-sync-kb-delete-item {
+  padding: 0;
+}
+
+.ima-sync-schedule-input {
+  width: 80px;
+  margin-right: 8px;
+}
+
 .ima-sync-kb-delete {
   display: flex;
   align-items: center;

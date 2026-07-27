@@ -5,7 +5,7 @@
  * 扩展名按下载响应 Content-Type 推断，URL 扩展名兜底。
  */
 import type { App } from "obsidian";
-import { normalizePath } from "obsidian";
+import { normalizePath, TFile } from "obsidian";
 import type { ImaClient } from "../api/imaClient";
 import { ensureFolder } from "../utils/path";
 import { logger } from "../utils/logger";
@@ -104,9 +104,9 @@ export async function saveFileFromBuffer(opts: {
   await ensureFolder(app, destDir);
 
   const existing = app.vault.getAbstractFileByPath(fullPath);
-  if (existing) {
-    await app.vault.modifyBinary(existing as never, buffer);
-  } else {
+  if (existing instanceof TFile) {
+    await app.vault.modifyBinary(existing, buffer);
+  } else if (!existing) {
     await app.vault.createBinary(fullPath, buffer);
   }
 
