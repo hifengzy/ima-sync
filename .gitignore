@@ -9,6 +9,7 @@ test/verify-frontmatter.mjs
 test/verify-clear.mjs
 test/verify-quota.mjs
 test/verify-image-naming.mjs
+test/verify-constants.mjs
 
 # Obsidian plugin local data (凭证与同步索引，不入库)
 data.json
