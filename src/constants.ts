@@ -1,5 +1,5 @@
 /**
- * 全局常量：端点 URL、默认值、MediaType 枚举、文件名非法字符。
+ * 全局常量：端点 URL、默认值、MediaType 常量、文件名非法字符。
  */
 
 /** ima OpenAPI 基础 URL */
@@ -34,23 +34,26 @@ export const ATTACHMENT_DIR_NAME = "attachments";
 export const NOTES_DIR_NAME = "Notes";
 
 /**
- * ima MediaType 枚举（已探针确认部分）。
+ * ima MediaType 常量（已探针确认部分）。
  * 其余文件类型（PDF/WORD/PPT/EXCEL/IMG/TXT）的精确枚举值未公布，
  * 统一通过 get_media_info 的 url_info + 下载响应 Content-Type 判定，不依赖具体数值。
+ *
+ * 用 as const 对象而非 enum：避免 number 与 enum 直接比较触发
+ * no-unsafe-enum-comparison，同时无需类型断言。
  */
-export enum MediaType {
+export const MediaType = {
   /** 知识库内笔记 */
-  NOTE = 11,
+  NOTE: 11,
   /** 文件夹（递归拉取子层级） */
-  FOLDER = 99,
+  FOLDER: 99,
   /** 微信文章 / 链接类（网页收藏） */
-  WEB_ARTICLE = 6,
-}
+  WEB_ARTICLE: 6,
+} as const;
+export type MediaType = (typeof MediaType)[keyof typeof MediaType];
 
 /** 判定是否为文件夹 */
-export const isFolder = (mediaType: number): boolean =>
-  (mediaType as MediaType) === MediaType.FOLDER;
+export const isFolder = (mediaType: number): boolean => mediaType === MediaType.FOLDER;
 
 /** 判定是否为知识库内笔记（media_type=11 或带 notebook_id） */
 export const isNoteType = (mediaType: number, notebookId?: string | null): boolean =>
-  (mediaType as MediaType) === MediaType.NOTE || Boolean(notebookId);
+  mediaType === MediaType.NOTE || Boolean(notebookId);
