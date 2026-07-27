@@ -39,8 +39,8 @@ const ENTITY_MAP: Record<string, string> = {
 
 function decodeEntities(text: string): string {
   return text
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16) || 0xfffd))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10) || 0xfffd))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16) || 0xfffd))
+    .replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(parseInt(d, 10) || 0xfffd))
     .replace(/&[a-zA-Z]+;|&#x[0-9a-fA-F]+;|&#\d+;/g, (m) => ENTITY_MAP[m] ?? m);
 }
 

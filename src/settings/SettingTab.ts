@@ -47,11 +47,6 @@ export class ImaSyncSettingTab extends PluginSettingTab {
     this.renderCache(containerEl);
   }
 
-  /** Declarative settings stub: return empty so Obsidian falls back to display(). */
-  getSettingDefinitions(): ReturnType<PluginSettingTab["getSettingDefinitions"]> {
-    return [];
-  }
-
   // ===== 1. ima 认证 =====
   private renderAuth(el: HTMLElement): void {
     new Setting(el)
@@ -115,17 +110,19 @@ export class ImaSyncSettingTab extends PluginSettingTab {
               new Notice("未获取到任何知识库，请检查凭证或网络", 6000);
               return;
             }
-            new KbPickerModal(this.app, kbs, this.plugin.settings.selectedKbs, async (kb) => {
-              const added: SelectedKb = {
-                kb_id: kb.kb_id,
-                kb_name: kb.kb_name,
-                base_type: kb.base_type,
-                role_type: kb.role_type,
-              };
-              this.plugin.settings.selectedKbs = [...this.plugin.settings.selectedKbs, added];
-              await this.plugin.saveSettings();
-              this.renderKbList(listEl);
-              new Notice(`已添加「${kb.kb_name}」`, 3000);
+            new KbPickerModal(this.app, kbs, this.plugin.settings.selectedKbs, (kb) => {
+              void (async () => {
+                const added: SelectedKb = {
+                  kb_id: kb.kb_id,
+                  kb_name: kb.kb_name,
+                  base_type: kb.base_type,
+                  role_type: kb.role_type,
+                };
+                this.plugin.settings.selectedKbs = [...this.plugin.settings.selectedKbs, added];
+                await this.plugin.saveSettings();
+                this.renderKbList(listEl);
+                new Notice(`已添加「${kb.kb_name}」`, 3000);
+              })();
             }).open();
           } catch (e) {
             new Notice(`获取知识库失败：${e instanceof Error ? e.message : String(e)}`, 8000);
@@ -310,8 +307,6 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       .addButton((btn) =>
         btn
           .setButtonText("清空缓存")
-          .setDestructive()
-      .setCta()
           .onClick(() => {
             new ConfirmModal(this.app, {
               title: "清空同步索引缓存",

@@ -68,14 +68,10 @@ export class ImaClient {
   ): Promise<{ status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string> }> {
     return requestUrl({
       url, method, headers, throw: false,
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
       body,
-      /* Obsidian supports timeout at runtime but the type-def is missing it */
-      // @ts-expect-error timeout is accepted at runtime
+      // @ts-expect-error timeout 运行时受支持，但 RequestUrlParam 类型定义缺失该字段
       timeout: REQUEST_TIMEOUT_MS,
-    }) as unknown as {
-      status: number; json: unknown; text: string; arrayBuffer: ArrayBuffer; headers: Record<string, string>;
-    };
+    });
   }
 
   /** 统一 POST 请求（经节流 + 重试） */
