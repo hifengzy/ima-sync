@@ -32,7 +32,7 @@
 1. 前往 [Releases](https://github.com/hifengzy/ima-sync/releases) 下载最新版 `main.js`、`manifest.json`、`styles.css`。
 2. 在 Obsidian 仓库的 `.obsidian/plugins/` 下创建 `ima-sync/` 目录。
 3. 将三个文件放入该目录。
-4. Obsidian → 设置 → 第三方插件 → 关闭安全模式 → 启用「ima.copilot To Obsidian」。
+4. Obsidian → 设置 → 第三方插件 → 关闭安全模式 → 启用「Ima Copilot Sync」。
 
 ### 从源码构建
 
@@ -53,11 +53,11 @@ npm run build    # 生成 main.js / main.js.map
 
 ### 插件设置
 
-1. Obsidian → 设置 → ima.copilot To Obsidian。
+1. Obsidian → 设置 → Ima Copilot Sync。
 2. **ima 认证**：填入 Client ID 与 API Key，点击「验证」按钮测试连接。
 3. **同步知识库**：点击「添加知识库」从 ima 拉取列表，勾选要同步的知识库（可多选）。
 4. **笔记同步**：开关独立笔记本同步。
-5. **同步根目录**：设置同步落地根目录（相对路径，如 `ima` 或 `A/B`，默认 `ima`）。
+5. **同步根目录**：设置同步落地根目录（相对路径，如 `ima` 或 `A/B`）。
 6. **附件存放**：二选一 — `per-kb`（知识库内 `attachments/` 子目录）或 `obsidian-global`（跟随 Obsidian 全局附件目录设置）。
 7. **自动同步**：可选开启定时同步并配置频次。
 8. 点击「立即同步」或在侧边栏（ribbon）一键触发。
@@ -113,6 +113,10 @@ npm run verify:frontmatter
 npm run verify:quota
 npm run verify:naming
 npm run verify:unit
+npm run verify:constants
+npm run verify:normalize
+npm run verify:images
+npm run verify:clear
 
 # 端到端冒烟测试（需真实 API 凭证）
 npm run test:build

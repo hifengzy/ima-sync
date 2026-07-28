@@ -113,6 +113,10 @@ npm run verify:frontmatter
 npm run verify:quota
 npm run verify:naming
 npm run verify:unit
+npm run verify:constants
+npm run verify:normalize
+npm run verify:images
+npm run verify:clear
 
 # E2E smoke test (requires real API credentials)
 npm run test:build
