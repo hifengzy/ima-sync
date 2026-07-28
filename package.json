@@ -1,6 +1,6 @@
 {
   "name": "ima-sync",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "将腾讯 ima 知识库与笔记单向同步到 Obsidian，自动转换为 Markdown 并下载附件。",
   "main": "main.js",
   "type": "commonjs",
@@ -11,11 +11,11 @@
     "test:build": "node test/build-test.mjs",
     "test": "node test/smoke.mjs",
     "verify:images": "node test/verify-images.mjs",
-    "verify:frontmatter": "esbuild test/verify-frontmatter.ts --bundle --platform=node --format=esm --outfile=test/verify-frontmatter.mjs --external:obsidian && node test/verify-frontmatter.mjs",
-    "verify:clear": "esbuild test/verify-clear.ts --bundle --platform=node --format=esm --outfile=test/verify-clear.mjs --external:obsidian && node test/verify-clear.mjs",
-    "verify:quota": "esbuild test/verify-quota.ts --bundle --platform=node --format=esm --outfile=test/verify-quota.mjs --external:obsidian && node test/verify-quota.mjs",
-    "verify:naming": "esbuild test/verify-image-naming.ts --bundle --platform=node --format=esm --outfile=test/verify-image-naming.mjs --external:obsidian && node test/verify-image-naming.mjs",
-    "verify:unit": "esbuild test/verify-unit.ts --bundle --platform=node --format=esm --outfile=test/verify-unit.mjs --external:obsidian && node test/verify-unit.mjs"
+    "verify:frontmatter": "esbuild test/verify-frontmatter.ts --bundle --platform=node --format=esm --outfile=test/verify-frontmatter.mjs --alias:obsidian=./test/mock-obsidian.ts && node test/verify-frontmatter.mjs",
+    "verify:clear": "esbuild test/verify-clear.ts --bundle --platform=node --format=esm --outfile=test/verify-clear.mjs --alias:obsidian=./test/mock-obsidian.ts && node test/verify-clear.mjs",
+    "verify:quota": "esbuild test/verify-quota.ts --bundle --platform=node --format=esm --outfile=test/verify-quota.mjs --alias:obsidian=./test/mock-obsidian.ts && node test/verify-quota.mjs",
+    "verify:naming": "esbuild test/verify-image-naming.ts --bundle --platform=node --format=esm --outfile=test/verify-image-naming.mjs --alias:obsidian=./test/mock-obsidian.ts && node test/verify-image-naming.mjs",
+    "verify:unit": "esbuild test/verify-unit.ts --bundle --platform=node --format=esm --outfile=test/verify-unit.mjs --alias:obsidian=./test/mock-obsidian.ts && node test/verify-unit.mjs"
   },
   "keywords": [
     "obsidian",
@@ -30,7 +30,7 @@
     "@types/turndown": "^5.0.5",
     "esbuild": "0.21.5",
     "jsdom": "^29.1.1",
-    "obsidian": "^1.6.0",
+    "obsidian": "^1.13.0",
     "tslib": "^2.6.2",
     "typescript": "^5.4.5"
   },
