@@ -196,7 +196,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
   private notesGroup(): SettingDefinitionItem {
     return {
       type: "group",
-      heading: "笔记同步",
+      heading: "同步笔记",
       items: [
         {
           name: "同步独立笔记",
@@ -211,7 +211,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
   private rootPathGroup(): SettingDefinitionItem {
     return {
       type: "group",
-      heading: "同步根目录",
+      heading: "仓库存放路径",
       items: [
         {
           name: "同步根目录路径",
@@ -230,7 +230,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
   private attachmentGroup(): SettingDefinitionItem {
     return {
       type: "group",
-      heading: "附件存放",
+      heading: "附件存放路径",
       items: [
         {
           name: "附件存放模式",
@@ -269,7 +269,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       items: [
         {
           name: "定时自动同步",
-          desc: "按设定频次自动触发同步（默认关闭）。",
+          desc: "按设定频次自动触发同步，ima API 存在每日限额，建议关闭（默认关闭）。",
           control: { key: "scheduleEnabled", type: "toggle" },
         },
         // 数字 + 单位并排需 render 组合；不走 control 机制，值在 onChange 内手动持久化 + clamp。
@@ -294,7 +294,9 @@ export class ImaSyncSettingTab extends PluginSettingTab {
                       text.setValue(String(clamped.value));
                     }
                     await this.plugin.saveSettings();
-                    this.plugin.applySchedule();
+                    if (this.plugin.settings.scheduleEnabled) {
+                      this.plugin.applySchedule();
+                    }
                   });
               })
               .addDropdown((d) => {
@@ -311,7 +313,9 @@ export class ImaSyncSettingTab extends PluginSettingTab {
                       showToast("频次过低，已按 5 分钟处理", 4000);
                     }
                     await this.plugin.saveSettings();
-                    this.plugin.applySchedule();
+                    if (this.plugin.settings.scheduleEnabled) {
+                      this.plugin.applySchedule();
+                    }
                   });
               });
           },

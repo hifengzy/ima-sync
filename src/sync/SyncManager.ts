@@ -66,6 +66,7 @@ export class SyncManager {
     private readonly index: SyncIndex,
     private readonly state: SyncState,
     private readonly getSettings: () => ImaSyncSettings,
+    private readonly onQuotaExceeded?: () => void,
   ) {
     this.api = new ImaApi(client);
   }
@@ -449,11 +450,12 @@ export class SyncManager {
     }
   }
 
-  /** 处理配额超限错误：首次弹 Notice + 设标志。返回是否为配额错误（FR-13） */
+  /** 处理配额超限错误：首次弹 Notice + 设标志 + 通知插件关闭定时器。返回是否为配额错误（FR-13） */
   private handleQuotaError(e: unknown): boolean {
     if (e instanceof ImaQuotaExceededError) {
       if (!this.quotaExceeded) {
         this.quotaExceeded = true;
+        this.onQuotaExceeded?.();
         showToast("请求超量，请明日再试", 8000);
         logger.warn("API 配额超限，中止同步");
       }

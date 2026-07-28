@@ -98,6 +98,7 @@ export default class ImaSyncPlugin extends Plugin {
   private syncManager!: SyncManager;
   private index!: SyncIndex;
   private ribbonIconEl?: HTMLElement;
+  private scheduleIntervalId?: number;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -106,7 +107,9 @@ export default class ImaSyncPlugin extends Plugin {
     const pluginDir = this.manifest.dir ?? normalizePath(`${this.app.vault.configDir}/plugins/ima-sync`);
     this.index = new SyncIndex(this.app, pluginDir);
     const state = new SyncState();
-    this.syncManager = new SyncManager(this.app, this.client, this.index, state, () => this.settings);
+    this.syncManager = new SyncManager(this.app, this.client, this.index, state, () => this.settings, () => {
+      void this.handleQuotaExceeded();
+    });
 
     // 命令：立即同步（FR-5.1）
     this.addCommand({
@@ -200,14 +203,30 @@ export default class ImaSyncPlugin extends Plugin {
 
   // ===== 调度与 ribbon =====
 
+  /** API 配额超限时自动关闭定时同步，避免反复弹出超限提示（FR-13） */
+  private async handleQuotaExceeded(): Promise<void> {
+    if (!this.settings.scheduleEnabled) return;
+    this.settings.scheduleEnabled = false;
+    await this.saveSettings();
+    this.applySchedule();
+    showToast("因 API 配额超限，已为你关闭自动同步", 8000);
+  }
+
   applySchedule(): void {
+    // 先清理已有定时器，防止开关关闭/频次变更后旧定时器残留
+    if (this.scheduleIntervalId !== undefined) {
+      window.clearInterval(this.scheduleIntervalId);
+      this.scheduleIntervalId = undefined;
+    }
     if (!this.settings.scheduleEnabled) return;
     const { value, unit, clamped } = clampSchedule(this.settings.scheduleValue, this.settings.scheduleUnit);
     if (clamped) {
       logger.info(`定时频次过低，已按 5 分钟处理`);
     }
     const ms = scheduleToMs(value, unit);
-    this.registerInterval(window.setInterval(() => void this.triggerSync(), ms));
+    this.scheduleIntervalId = this.registerInterval(
+      window.setInterval(() => void this.triggerSync(), ms),
+    );
   }
 
   applyRibbon(): void {
