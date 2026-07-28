@@ -1,6 +1,6 @@
 {
   "name": "ima-sync",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "将腾讯 ima 知识库与笔记单向同步到 Obsidian，自动转换为 Markdown 并下载附件。",
   "main": "main.js",
   "type": "commonjs",
