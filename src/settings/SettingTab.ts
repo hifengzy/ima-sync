@@ -294,7 +294,9 @@ export class ImaSyncSettingTab extends PluginSettingTab {
                       text.setValue(String(clamped.value));
                     }
                     await this.plugin.saveSettings();
-                    this.plugin.applySchedule();
+                    if (this.plugin.settings.scheduleEnabled) {
+                      this.plugin.applySchedule();
+                    }
                   });
               })
               .addDropdown((d) => {
@@ -311,7 +313,9 @@ export class ImaSyncSettingTab extends PluginSettingTab {
                       showToast("频次过低，已按 5 分钟处理", 4000);
                     }
                     await this.plugin.saveSettings();
-                    this.plugin.applySchedule();
+                    if (this.plugin.settings.scheduleEnabled) {
+                      this.plugin.applySchedule();
+                    }
                   });
               });
           },
