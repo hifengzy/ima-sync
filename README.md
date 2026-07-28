@@ -1,7 +1,7 @@
 # Ima Copilot Sync
 
 [![GitHub release](https://img.shields.io/github/v/release/hifengzy/ima-sync?include_prereleases)](https://github.com/hifengzy/ima-sync/releases)
-[![Obsidian](https://img.shields.io/badge/Obsidian-1.6.0%2B-7C3AED)](https://obsidian.md)
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.13.0%2B-7C3AED)](https://obsidian.md)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4%2B-3178C6)](https://www.typescriptlang.org/)
 
