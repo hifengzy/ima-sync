@@ -82,7 +82,7 @@ export class ImaSyncSettingTab extends PluginSettingTab {
       case "showRibbonIcon":
         return Boolean(value);
       case "attachmentMode":
-        return String(value) as ImaSyncSettings["attachmentMode"];
+        return String(value);
       default:
         return value;
     }
