@@ -8,6 +8,7 @@ import type { KbInfo } from "./api/types";
 import { DEFAULT_SETTINGS } from "./settings/types";
 import type { ImaSyncSettings } from "./settings/types";
 import { ImaSyncSettingTab } from "./settings/SettingTab";
+import type { TestConnectionResult } from "./settings/SettingTab";
 import { SyncIndex } from "./sync/SyncIndex";
 import { SyncManager } from "./sync/SyncManager";
 import { SyncState } from "./sync/SyncState";
@@ -15,6 +16,7 @@ import { showToast } from "./ui/ProgressNotice";
 import { clampSchedule, scheduleToMs } from "./utils/path";
 import { errorMessage, logger } from "./utils/logger";
 import { ENABLE_PROBE } from "./constants";
+import { createTranslator } from "./settings/i18n";
 
 export default class ImaSyncPlugin extends Plugin {
   // 原始 sync.svg，仅替换 fill 色值为 currentColor 以适配 Obsidian 主题
@@ -99,6 +101,7 @@ export default class ImaSyncPlugin extends Plugin {
   private index!: SyncIndex;
   private ribbonIconEl?: HTMLElement;
   private scheduleIntervalId?: number;
+  private syncState!: SyncState;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -107,6 +110,7 @@ export default class ImaSyncPlugin extends Plugin {
     const pluginDir = this.manifest.dir ?? normalizePath(`${this.app.vault.configDir}/plugins/ima-sync`);
     this.index = new SyncIndex(this.app, pluginDir);
     const state = new SyncState();
+    this.syncState = state;
     this.syncManager = new SyncManager(this.app, this.client, this.index, state, () => this.settings, () => {
       void this.handleQuotaExceeded();
     });
@@ -143,7 +147,13 @@ export default class ImaSyncPlugin extends Plugin {
   // ===== 设置持久化 =====
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<ImaSyncSettings> ?? {});
+    const data = (await this.loadData()) as Partial<ImaSyncSettings> ?? {};
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+    // 运行时归一化：data.json 中非法的 uiLanguage（手工编辑/同步冲突）回退默认中文，
+    // 否则设置页渲染时取字典会直接崩溃，且语言下拉自身也无法渲染，用户无法自愈
+    if (this.settings.uiLanguage !== "zh" && this.settings.uiLanguage !== "en") {
+      this.settings.uiLanguage = "zh";
+    }
   }
 
   async saveSettings(): Promise<void> {
@@ -155,30 +165,36 @@ export default class ImaSyncPlugin extends Plugin {
   async triggerSync(): Promise<void> {
     this.client.configure(this.settings.clientId, this.settings.apiKey);
     if (!this.client.isConfigured()) {
-      showToast("请先配置 ima Client ID 与 API Key", 5000);
+      showToast(createTranslator(this.settings.uiLanguage)("notConfigured"), 5000);
       return;
     }
     this.setRibbonSpinning(true);
     try {
       await this.syncManager.triggerSync();
     } finally {
-      this.setRibbonSpinning(false);
+      // 同步中被跳过的重复调用不得关掉旋转：只有真正结束时才复位
+      if (!this.syncState.isSyncing()) {
+        this.setRibbonSpinning(false);
+      }
     }
   }
 
   // ===== 验证连接 =====
 
-  async testConnection(): Promise<{ ok: boolean; message: string }> {
+  /** 结构化结果：文案 key 交由调用方（设置页）按当前语言渲染，避免成品字符串穿越语言上下文 */
+  async testConnection(): Promise<TestConnectionResult> {
     this.client.configure(this.settings.clientId, this.settings.apiKey);
     if (!this.client.isConfigured()) {
-      return { ok: false, message: "请先填写 Client ID 与 API Key" };
+      return { ok: false, key: "verifyMissingCredentials" };
     }
     try {
       const data = await this.client.searchKnowledgeBase({ query: "", cursor: "", limit: 1 });
       const count = data.info_list?.length ?? 0;
-      return { ok: true, message: count > 0 ? `连接成功，凭证有效` : "连接成功（暂无知识库）" };
+      return count > 0
+        ? { ok: true, key: "verifySuccess" }
+        : { ok: true, key: "verifySuccessNoKb" };
     } catch (e) {
-      return { ok: false, message: `连接失败：${errorMessage(e)}` };
+      return { ok: false, key: "verifyFailed", params: { msg: errorMessage(e) } };
     }
   }
 

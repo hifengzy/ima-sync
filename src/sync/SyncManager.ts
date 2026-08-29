@@ -78,50 +78,53 @@ export class SyncManager {
       return emptyStats();
     }
 
-    const settings = this.getSettings();
-    const validateError = this.validateConfig(settings);
-    if (validateError) {
-      showToast(validateError, 8000);
-      this.state.stop();
-      return emptyStats();
-    }
-
-    this.stats = emptyStats();
-    this.quotaExceeded = false;
-    showSyncStart();
-    logger.info("同步开始");
-
+    // start() 成功后立即进入受保护区：中间任何同步抛出都必须保证 state.stop() 执行，
+    // 否则 isSyncing() 永真，ribbon 将永久旋转且后续所有同步被静默跳过
     try {
-      await this.index.load();
-      await ensureFolder(this.app, settings.syncRootPath);
-
-      for (const kb of settings.selectedKbs) {
-        if (this.quotaExceeded) break;
-        try {
-          await this.syncKnowledgeBase(kb);
-          await this.index.save();
-        } catch (e) {
-          if (this.handleQuotaError(e)) break;
-          this.recordFailure(`知识库「${kb.kb_name}」`, e);
-        }
+      const settings = this.getSettings();
+      const validateError = this.validateConfig(settings);
+      if (validateError) {
+        showToast(validateError, 8000);
+        return emptyStats();
       }
 
-      if (settings.syncNotes && !this.quotaExceeded) {
-        try {
-          await this.syncNotes();
-          await this.index.save();
-        } catch (e) {
-          if (!this.handleQuotaError(e)) {
-            this.recordFailure("独立笔记", e);
+      this.stats = emptyStats();
+      this.quotaExceeded = false;
+      showSyncStart();
+      logger.info("同步开始");
+
+      try {
+        await this.index.load();
+        await ensureFolder(this.app, settings.syncRootPath);
+
+        for (const kb of settings.selectedKbs) {
+          if (this.quotaExceeded) break;
+          try {
+            await this.syncKnowledgeBase(kb);
+            await this.index.save();
+          } catch (e) {
+            if (this.handleQuotaError(e)) break;
+            this.recordFailure(`知识库「${kb.kb_name}」`, e);
           }
         }
-      }
 
-      this.emitSummary();
-    } catch (e) {
-      if (!this.handleQuotaError(e)) {
-        logger.error("同步异常", e);
-        showToast(`同步异常：${errorMessage(e)}`, 8000);
+        if (settings.syncNotes && !this.quotaExceeded) {
+          try {
+            await this.syncNotes();
+            await this.index.save();
+          } catch (e) {
+            if (!this.handleQuotaError(e)) {
+              this.recordFailure("独立笔记", e);
+            }
+          }
+        }
+
+        this.emitSummary();
+      } catch (e) {
+        if (!this.handleQuotaError(e)) {
+          logger.error("同步异常", e);
+          showToast(`同步异常：${errorMessage(e)}`, 8000);
+        }
       }
     } finally {
       this.state.stop();
