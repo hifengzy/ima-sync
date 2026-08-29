@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # 生成构建溯源 attestation 所需（Obsidian 社区审查建议）
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v3
 
@@ -22,6 +25,16 @@ jobs:
         run: |
           npm install
           npm run build
+
+      # 为 release 资产生成签名溯源，用户可用 gh attestation verify 验证
+      # （官方模板：https://docs.obsidian.md/Plugins/Releasing/Release+your+plugin+with+GitHub+Actions）
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
 
       - name: Create release
         env:

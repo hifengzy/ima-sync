@@ -48,16 +48,19 @@ export class ImaSyncSettingTab extends PluginSettingTab {
   /** 构造 Client ID 说明片段：前缀文案 + 可点击的平台链接 + 后缀文案 */
   private static buildClientDesc(before: string, after: string): DocumentFragment {
     const url = ImaSyncSettingTab.IMA_OPEN_PLATFORM_URL;
-    const frag = document.createDocumentFragment();
-    frag.append(before);
-    const link = document.createElement("a");
-    link.href = url;
-    link.textContent = url;
-    link.target = "_blank";
-    link.rel = "noopener";
-    frag.appendChild(link);
-    frag.append(after);
-    return frag;
+    // 用 Obsidian DOM 助手（createFragment/createEl）替代原生 DOM 方法（社区审查规范 prefer-create-el）
+    return createFragment((frag) => {
+      frag.append(before);
+      frag.createEl("a", {
+        text: url,
+        attr: {
+          href: url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+      });
+      frag.append(after);
+    });
   }
 
   constructor(app: App, private readonly plugin: ImaSyncPluginFacade) {
