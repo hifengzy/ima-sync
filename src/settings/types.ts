@@ -15,7 +15,13 @@ export type AttachmentMode = "per-kb" | "obsidian-global";
 
 export type ScheduleUnit = "minutes" | "hours" | "days";
 
+/** 设置页界面语言 */
+export type UiLanguage = "zh" | "en";
+
 export interface ImaSyncSettings {
+  /** 0. 设置页界面语言 */
+  uiLanguage: UiLanguage;
+
   /** 1. ima 认证 */
   clientId: string;
   apiKey: string;
@@ -42,6 +48,7 @@ export interface ImaSyncSettings {
 }
 
 export const DEFAULT_SETTINGS: ImaSyncSettings = {
+  uiLanguage: "zh",
   clientId: "",
   apiKey: "",
   selectedKbs: [],
